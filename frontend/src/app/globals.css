@@ -1,0 +1,5910 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Render-quality baseline ──────────────────────────────────────────
+   Bumped baseline weights so the whole UI reads heavier and crisper.
+   - Body (p, span, div): 500 (medium) so even small captions look solid
+   - Headings: 700 (bold) for h1/h2, 600 for h3+
+   The * selector previously forced 400 on EVERY element, which silently
+   nuked the browser's default bold on headings — that's why the page
+   looked uniformly thin. */
+html {
+  font-size: 16px;
+}
+
+* {
+  font-family:
+    'Inter',
+    system-ui,
+    -apple-system,
+    sans-serif;
+  letter-spacing: -0.008em;
+}
+
+/* Body baseline — readable medium weight everywhere by default. */
+body,
+p,
+span,
+li,
+td,
+th,
+a,
+button,
+input,
+textarea,
+select,
+label,
+div {
+  font-weight: 500;
+}
+
+/* Headings — actually bold so the visual hierarchy reads. Tailwind
+   utility classes (font-semibold/bold/etc) still win because they're
+   applied directly on the element. */
+h1 {
+  font-weight: 700;
+}
+h2 {
+  font-weight: 700;
+}
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 600;
+}
+
+/* Small caption-style text — keep medium weight (already covered by
+   the body rule), but the user-facing helper class below forces it
+   when needed. */
+.font-mono,
+[class*='font-mono'] {
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+}
+
+html,
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: geometricPrecision;
+  font-feature-settings:
+    'cv02',
+    'cv03',
+    'cv04',
+    'cv11',
+    'ss01';
+}
+
+/* iOS auto-zooms any input with a font-size under 16px. Force every
+   form control on narrow viewports to 16px so focus never snaps the
+   viewport in. Desktop keeps the compact sizes. */
+@media (max-width: 640px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+/* Smooth scrolling with scroll margin for anchors */
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* Focus states for keyboard navigation */
+button:focus,
+a:focus,
+input:focus {
+  outline: 2px solid rgba(20, 241, 149, 0.5);
+  outline-offset: 2px;
+}
+
+/* Remove default focus for mouse users */
+button:focus:not(:focus-visible),
+a:focus:not(:focus-visible),
+input:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Custom focus visible for better UX */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 2px solid rgba(20, 241, 149, 0.8);
+  outline-offset: 2px;
+}
+
+/* Smooth transitions with will-change for performance */
+* {
+  transition-property: color, background-color, border-color, box-shadow, opacity;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Performance optimizations */
+body {
+  font-display: swap;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Optimize images for CLS (Cumulative Layout Shift) */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Optimize animations with GPU acceleration */
+.animate-scroll {
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CSS Variables
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root,
+:root[data-theme='dark'] {
+  /* ── Surfaces ───────────────────────────────────────────────────────────
+     Layered greys keep the dashboard quiet so emerald accents sing. Deep
+     near-black at the page floor; softly elevated panels above. */
+  --bg: #07080a;
+  --bg-elevated: #0e1013;
+  --bg-card: #11141a;
+  --bg-card2: #161a21;
+  --border: #1d212a;
+  --border-hover: #2c3240;
+  --text: #e6e8ec;
+  --text-secondary: #c5c9d1;
+  --text-muted: #8b92a0;
+
+  /* ── Brand: Solana green (#14F195) — Atlas runs on Solana, brand is the chain ── */
+  --brand: #14f195;
+  --brand-hover: #6ee7b7;
+  --brand-active: #00c853;
+  --brand-dim: rgba(20, 241, 149, 0.1);
+  --brand-50: #ecfdf5;
+  --brand-100: #d1fae5;
+  --brand-200: #a7f3d0;
+  --brand-300: #6ee7b7;
+  --brand-400: #14f195;
+  --brand-500: #14f195;
+  --brand-600: #00c853;
+  --brand-700: #00a046;
+  --brand-800: #007a35;
+  --brand-900: #064e3b;
+  --brand-950: #022c22;
+
+  /* Accents kept minimal so the emerald stays the hero. */
+  --accent-mint: #5eead4;
+  --accent-amber: #f59e0b;
+  --success: var(--brand-500);
+  --warning: #f59e0b;
+  --error: #ef4444;
+
+  /* ── Elevation: soft, layered shadows that read "premium app" ── */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 6px 16px -6px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 22px 48px -16px rgba(0, 0, 0, 0.55);
+  --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 8px 28px -12px rgba(0, 0, 0, 0.55);
+  --shadow-card-hover:
+    0 1px 0 rgba(255, 255, 255, 0.06) inset, 0 22px 48px -18px rgba(20, 241, 149, 0.22),
+    0 0 0 1px rgba(20, 241, 149, 0.22);
+  --shadow-brand: 0 4px 14px rgba(20, 241, 149, 0.28);
+  --shadow-glow: 0 0 22px rgba(20, 241, 149, 0.36), 0 0 64px -8px rgba(20, 241, 149, 0.2);
+  --card-hover-shadow: var(--shadow-card-hover);
+
+  /* ── Radii / spacing tokens ── */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+  --sidebar-width: 240px;
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 3rem;
+
+  /* ── Motion ── */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
+  --duration-fast: 140ms;
+  --duration-base: 240ms;
+  --duration-slow: 380ms;
+
+  color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  --bg: #f8f9fa;
+  --bg-elevated: #f0f1f3;
+  --bg-card: #ffffff;
+  --bg-card2: #f5f5f7;
+  --border: #e2e4e9;
+  --border-hover: #c8ccd3;
+  --text: #111827;
+  --text-secondary: #4b5563;
+  --text-muted: #6b7280;
+  /* Solana green darkened for AA contrast on white surfaces. */
+  --brand: #00a046;
+  --brand-dim: rgba(0, 160, 70, 0.08);
+  --brand-hover: #00c853;
+  --brand-active: #007a35;
+  --brand-300: #6ee7b7;
+  --brand-400: #14f195;
+  --brand-500: #00c853;
+  --brand-600: #00a046;
+  --success: #16a34a;
+  --warning: #d97706;
+  --error: #dc2626;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.1);
+  --shadow-brand: 0 4px 14px rgba(0, 200, 83, 0.18);
+  --card-hover-shadow: 0 8px 24px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 200, 83, 0.14);
+  color-scheme: light;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Base
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  /* Inter only — Geist was loaded async and produced a font-flash on
+     /how-it-works that made it look like a different typeface than
+     /market. Drop Geist from the stack so every page renders Inter
+     from first paint. */
+  font-family:
+    'Inter',
+    system-ui,
+    -apple-system,
+    sans-serif;
+  /* Body baseline 500 (medium) — was 300 (Inter Light), which on
+     Windows ClearType reads fuzzy and made every page feel thin. */
+  font-weight: 500;
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  letter-spacing: -0.01em;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 300;
+  letter-spacing: -0.02em;
+}
+
+p,
+span,
+a,
+li,
+button,
+input,
+textarea {
+  font-weight: 300;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+::selection {
+  background: rgba(20, 241, 149, 0.25);
+  color: #fff;
+}
+
+/* Light mode selection */
+:root[data-theme='light'] ::selection {
+  background: rgba(20, 241, 149, 0.2);
+  color: #111;
+}
+
+/* ── App-feel: fluid page transition ────────────────────────────────────────
+   Every route change re-keys the wrapper, replaying this fade+rise+blur in
+   under 360ms. Gives the SPA the same kinetic settle as a native app pane
+   sliding into view. */
+@keyframes app-page-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+.app-page-transition {
+  animation: app-page-in 380ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: opacity, transform, filter;
+}
+.app-page-transition > * {
+  /* avoid wrapper itself causing horizontal overflow during the slide */
+  min-width: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-page-transition {
+    animation: none;
+  }
+}
+
+/* App-feel: macOS-style auto-hiding scrollbar — only renders on hover/scroll
+   so reading panels stay distraction-free. Falls back to the existing
+   subtle thumb on platforms without this support. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+*:hover,
+*:focus-within {
+  scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Components
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@layer components {
+  /* ─────────────────────────────────────────────────────────────────────────
+     Atlas primitives — button / input / select / pill
+     ─────────────────────────────────────────────────────────────────────────
+     One canonical look per control, modeled on Vercel + Render dashboards.
+     Use these classes everywhere instead of bespoke Tailwind chains so the
+     entire app reads as one application, not five different sites stitched
+     together. Pure CSS, no extra deps.
+     ───────────────────────────────────────────────────────────────────── */
+
+  /* Base button — shared layout, focus, motion, disabled. */
+  .a-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 10px;
+    padding: 9px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -0.005em;
+    font-family: inherit;
+    cursor: pointer;
+    user-select: none;
+    transition:
+      background 140ms cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 140ms cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1),
+      transform 90ms cubic-bezier(0.16, 1, 0.3, 1),
+      color 140ms cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform, box-shadow;
+  }
+  .a-btn:disabled,
+  .a-btn[aria-disabled='true'] {
+    opacity: 0.45;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+  .a-btn:active {
+    transform: scale(0.985);
+  }
+  .a-btn:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px var(--bg),
+      0 0 0 4px rgba(20, 241, 149, 0.45);
+  }
+  .a-btn-sm {
+    padding: 6px 11px;
+    font-size: 12px;
+    border-radius: 8px;
+  }
+  .a-btn-lg {
+    padding: 12px 18px;
+    font-size: 14px;
+    border-radius: 12px;
+  }
+
+  /* Primary — solid Solana green, black ink. The "do this" button. */
+  .a-btn-primary {
+    background: var(--brand);
+    color: #042417;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.18),
+      0 1px 2px rgba(0, 0, 0, 0.35),
+      0 0 0 0 rgba(20, 241, 149, 0.4);
+  }
+  .a-btn-primary:hover {
+    background: #1bff9f;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.18),
+      0 2px 6px rgba(0, 0, 0, 0.35),
+      0 0 24px -4px rgba(20, 241, 149, 0.5);
+  }
+  .a-btn-primary:active {
+    background: var(--brand-active);
+  }
+
+  /* Secondary — bordered surface, no fill. The "alternate path" button. */
+  .a-btn-secondary {
+    background: var(--bg-card);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .a-btn-secondary:hover {
+    background: var(--bg-card2);
+    border-color: var(--border-hover);
+  }
+
+  /* Ghost — text-only with hover wash. Use for table actions, nav rows. */
+  .a-btn-ghost {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid transparent;
+  }
+  .a-btn-ghost:hover {
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text);
+  }
+  .a-btn-ghost.is-active {
+    background: var(--brand-dim);
+    color: var(--brand);
+    border-color: rgba(20, 241, 149, 0.22);
+  }
+
+  /* Danger — for destructive actions. Restrained red, not aggressive. */
+  .a-btn-danger {
+    background: rgba(239, 68, 68, 0.12);
+    color: #fca5a5;
+    border: 1px solid rgba(239, 68, 68, 0.28);
+  }
+  .a-btn-danger:hover {
+    background: rgba(239, 68, 68, 0.2);
+    color: #fecaca;
+  }
+
+  /* Icon-only square. Use when there's room for nothing but a glyph. */
+  .a-btn-icon {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border-radius: 8px;
+  }
+
+  /* ── Inputs ── */
+  .a-input {
+    width: 100%;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 9px 12px;
+    font-size: 13.5px;
+    font-family: inherit;
+    line-height: 1.4;
+    transition:
+      border-color 140ms cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1),
+      background 140ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .a-input::placeholder {
+    color: var(--text-muted);
+  }
+  .a-input:hover {
+    border-color: var(--border-hover);
+  }
+  .a-input:focus {
+    outline: none;
+    border-color: rgba(20, 241, 149, 0.55);
+    background: var(--bg-elevated);
+    box-shadow: 0 0 0 3px rgba(20, 241, 149, 0.14);
+  }
+  .a-input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* Search input variant — left icon slot. Use with a parent .a-input-wrap. */
+  .a-input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .a-input-wrap > .a-icon-left {
+    position: absolute;
+    left: 12px;
+    color: var(--text-muted);
+    pointer-events: none;
+  }
+  .a-input-wrap > .a-input--has-icon {
+    padding-left: 36px;
+  }
+  /* ⌘K hint chip floated to the right of a search input. */
+  .a-kbd {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px 6px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--text-muted);
+    font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+    font-size: 10.5px;
+    line-height: 1;
+    letter-spacing: 0.04em;
+  }
+
+  /* ── Status pills (e.g. "Active", "Funded", "Disputed"). ── */
+  .a-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 9px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.4;
+    letter-spacing: 0.005em;
+    border: 1px solid transparent;
+  }
+  .a-pill::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 9999px;
+    background: currentColor;
+    box-shadow: 0 0 8px currentColor;
+  }
+  .a-pill-success {
+    background: rgba(20, 241, 149, 0.1);
+    color: #6ee7b7;
+    border-color: rgba(20, 241, 149, 0.22);
+  }
+  .a-pill-warning {
+    background: rgba(245, 158, 11, 0.1);
+    color: #fbbf24;
+    border-color: rgba(245, 158, 11, 0.24);
+  }
+  .a-pill-danger {
+    background: rgba(239, 68, 68, 0.1);
+    color: #fca5a5;
+    border-color: rgba(239, 68, 68, 0.24);
+  }
+  .a-pill-neutral {
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-secondary);
+    border-color: var(--border);
+  }
+  .a-pill-neutral::before {
+    background: var(--text-muted);
+    box-shadow: none;
+  }
+
+  /* ── Cards ── */
+  .card {
+    background: linear-gradient(180deg, rgba(20, 20, 26, 0.6) 0%, rgba(10, 10, 14, 0.6) 100%);
+    border-radius: 12px;
+    padding: 16px;
+    position: relative;
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.06),
+      inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    transition: box-shadow 0.2s ease;
+  }
+  .card:hover {
+    box-shadow:
+      0 0 0 1px rgba(20, 241, 149, 0.22),
+      inset 0 1px 0 rgba(255, 255, 255, 0.04),
+      0 8px 24px -12px rgba(0, 0, 0, 0.5);
+  }
+
+  .card-interactive {
+    background: linear-gradient(180deg, rgba(20, 20, 26, 0.6) 0%, rgba(10, 10, 14, 0.6) 100%);
+    border-radius: 12px;
+    padding: 16px;
+    cursor: pointer;
+    position: relative;
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.06),
+      inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    transition:
+      box-shadow 0.2s ease,
+      transform 0.2s ease;
+  }
+  .card-interactive:hover {
+    box-shadow:
+      0 0 0 1px rgba(20, 241, 149, 0.35),
+      inset 0 1px 0 rgba(255, 255, 255, 0.04),
+      0 12px 28px -14px rgba(20, 241, 149, 0.25);
+    transform: translateY(-2px);
+  }
+  .card-interactive:active {
+    transform: translateY(0);
+  }
+
+  .card-elevated {
+    background: linear-gradient(180deg, rgba(20, 20, 26, 0.55) 0%, rgba(10, 10, 14, 0.55) 100%);
+    border-radius: 14px;
+    padding: 20px;
+    position: relative;
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.06),
+      inset 0 1px 0 rgba(255, 255, 255, 0.04),
+      0 12px 36px -20px rgba(0, 0, 0, 0.55);
+    transition:
+      box-shadow 0.25s ease,
+      transform 0.25s ease;
+  }
+  .card-elevated:hover {
+    box-shadow:
+      0 0 0 1px rgba(20, 241, 149, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      0 16px 40px -18px rgba(20, 241, 149, 0.25);
+    transform: translateY(-3px);
+  }
+
+  /* ── Buttons ── */
+  .btn-primary {
+    @apply relative inline-flex items-center justify-center font-medium text-sm
+           text-white cursor-pointer rounded-lg px-4 py-2;
+    letter-spacing: 0.005em;
+    background: linear-gradient(180deg, rgba(20, 241, 149, 0.32) 0%, rgba(20, 241, 149, 0.12) 100%);
+    box-shadow:
+      inset 0 0 0 1px rgba(20, 241, 149, 0.45),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 0 18px -4px rgba(20, 241, 149, 0.5);
+    transition:
+      filter 0.2s ease,
+      transform 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+  .btn-primary:hover {
+    filter: brightness(1.1);
+    box-shadow:
+      inset 0 0 0 1px rgba(20, 241, 149, 0.55),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      0 0 26px -4px rgba(20, 241, 149, 0.6);
+    transform: translateY(-1px);
+  }
+  .btn-primary:active {
+    transform: translateY(0) scale(0.98);
+  }
+
+  .btn-secondary {
+    @apply relative inline-flex items-center justify-center font-medium text-sm
+           cursor-pointer rounded-lg px-4 py-2;
+    letter-spacing: 0.005em;
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+    transition:
+      background 0.2s ease,
+      box-shadow 0.2s ease,
+      transform 0.2s ease;
+  }
+  .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.07);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+    transform: translateY(-1px);
+  }
+  .btn-secondary:active {
+    transform: translateY(0);
+  }
+
+  .btn-ghost {
+    @apply relative inline-flex items-center justify-center font-light text-sm
+           cursor-pointer rounded-lg px-3 py-1.5;
+    color: var(--text-muted);
+    transition: all 0.2s ease;
+  }
+  .btn-ghost:hover {
+    color: var(--text);
+    background: var(--brand-dim);
+  }
+
+  .btn-danger {
+    @apply relative inline-flex items-center justify-center font-light text-sm
+           text-white cursor-pointer rounded-lg px-4 py-2;
+    background: var(--error);
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(239, 68, 68, 0.2);
+  }
+  .btn-danger:hover {
+    opacity: 0.9;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+    transform: translateY(-1px);
+  }
+  .btn-danger:active {
+    transform: translateY(0);
+  }
+
+  /* ── Inputs ── */
+  .input {
+    @apply w-full rounded-lg px-3 py-2 text-sm outline-none;
+    background: linear-gradient(180deg, rgba(20, 20, 26, 0.7) 0%, rgba(10, 10, 14, 0.7) 100%);
+    color: var(--text);
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.06),
+      inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    transition: box-shadow 0.2s ease;
+  }
+  .input::placeholder {
+    color: var(--text-muted);
+  }
+  .input:focus {
+    box-shadow:
+      0 0 0 1px rgba(20, 241, 149, 0.45),
+      0 0 0 4px rgba(20, 241, 149, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
+
+  .terminal-input {
+    @apply w-full rounded-lg px-3 py-2 text-sm outline-none;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family:
+      ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+  .terminal-input::placeholder {
+    color: var(--text-muted);
+    opacity: 0.7;
+  }
+  .terminal-input:focus {
+    border-color: var(--brand);
+    box-shadow:
+      0 0 0 3px var(--brand-dim),
+      0 1px 4px rgba(20, 241, 149, 0.1);
+  }
+
+  /* ── Badges ── */
+  .badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded-md text-xs font-light;
+    background: var(--brand-dim);
+    color: var(--brand);
+    border: 1px solid rgba(20, 241, 149, 0.15);
+  }
+  .badge-secondary {
+    @apply inline-flex items-center px-2 py-0.5 rounded-md text-xs font-light;
+    background: var(--bg-elevated);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+  }
+  .badge-success {
+    @apply inline-flex items-center px-2 py-0.5 rounded-md text-xs font-light;
+    background: rgba(34, 197, 94, 0.1);
+    color: var(--success);
+    border: 1px solid rgba(34, 197, 94, 0.2);
+  }
+  .badge-warning {
+    @apply inline-flex items-center px-2 py-0.5 rounded-md text-xs font-light;
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--warning);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+  }
+  .badge-error {
+    @apply inline-flex items-center px-2 py-0.5 rounded-md text-xs font-light;
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--error);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+  }
+
+  /* ── Legacy / Terminal ── */
+  .terminal-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+  }
+  .terminal-header {
+    @apply flex items-center gap-2 pb-3 mb-3;
+    border-bottom: 1px solid var(--border);
+  }
+  .terminal-dot {
+    @apply w-2.5 h-2.5 rounded-full;
+  }
+  .terminal-dot-red {
+    background: #ff5f57;
+  }
+  .terminal-dot-yellow {
+    background: #febc2e;
+  }
+  .terminal-dot-green {
+    background: #28c840;
+  }
+
+  /* ── Feature cards ── */
+  .feature-card {
+    position: relative;
+    background: linear-gradient(180deg, rgba(20, 20, 26, 0.55) 0%, rgba(10, 10, 14, 0.55) 100%);
+    border-radius: 14px;
+    padding: 24px;
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.06),
+      inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    transition:
+      box-shadow 0.25s ease,
+      transform 0.25s ease;
+  }
+  .feature-card:hover {
+    box-shadow:
+      0 0 0 1px rgba(20, 241, 149, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      0 16px 40px -18px rgba(20, 241, 149, 0.25);
+    transform: translateY(-2px);
+  }
+  .feature-icon-wrap {
+    @apply inline-flex items-center justify-center w-11 h-11 rounded-xl mb-4;
+    background: linear-gradient(135deg, rgba(20, 241, 149, 0.2) 0%, rgba(20, 241, 149, 0.05) 100%);
+    box-shadow:
+      inset 0 0 0 1px rgba(20, 241, 149, 0.25),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    transition: box-shadow 0.25s ease;
+  }
+  .feature-card:hover .feature-icon-wrap {
+    box-shadow:
+      inset 0 0 0 1px rgba(20, 241, 149, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 0 16px -2px rgba(20, 241, 149, 0.3);
+  }
+
+  /* ── Neon / branded buttons ── */
+  .btn-neon {
+    @apply relative px-4 py-2 text-sm font-light
+           text-atlas-400 border border-atlas-400/30 rounded-lg
+           transition-all duration-200 cursor-pointer
+           hover:border-atlas-400/60 hover:text-white hover:bg-atlas-400/10;
+  }
+  .btn-neon:hover {
+    box-shadow: 0 0 16px rgba(20, 241, 149, 0.15);
+  }
+
+  .btn-neon-solid {
+    @apply relative px-4 py-2 text-sm font-light text-white rounded-lg
+           transition-all duration-200 cursor-pointer;
+    background: var(--brand);
+    box-shadow: var(--shadow-sm);
+  }
+  .btn-neon-solid:hover {
+    background: var(--brand-hover);
+    box-shadow: var(--shadow-brand);
+    transform: translateY(-1px);
+  }
+
+  .auth-provider-btn {
+    @apply w-full flex items-center gap-3 px-4 py-3 rounded-lg
+           transition-all duration-200 cursor-pointer
+           disabled:opacity-50 disabled:cursor-not-allowed;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+  }
+  .auth-provider-btn:hover {
+    background: var(--bg-card2);
+    border-color: var(--border-hover);
+    box-shadow: var(--shadow-sm);
+    transform: translateY(-1px);
+  }
+
+  /* ── Hero gradient text ── */
+  .hero-gradient {
+    background: linear-gradient(135deg, #14f195 0%, #a78bfa 50%, #a7f3d0 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  /* ── Utility text/bg/border classes ── */
+  .text-terminal-muted {
+    color: var(--text-muted);
+  }
+  .text-terminal-text {
+    color: var(--text);
+  }
+  .bg-terminal-bg {
+    background: var(--bg);
+  }
+  .bg-terminal-card {
+    background: var(--bg-card);
+  }
+  .border-terminal-border {
+    border-color: var(--border);
+  }
+
+  .security-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+  }
+  .security-badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded-md text-xs font-light;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    background: var(--bg-elevated);
+  }
+  .terminal-badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded-md text-xs font-light
+           border border-atlas-400/20 text-atlas-400 bg-atlas-500/5;
+  }
+
+  .status-online {
+    @apply inline-block w-2 h-2 rounded-full bg-green-400;
+    box-shadow: 0 0 4px rgba(74, 222, 128, 0.6);
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+
+  /* ── Section containers ── */
+  .page-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+  .page-header {
+    padding-top: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 24px;
+  }
+  .page-header h1 {
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+
+  /* ── Skeleton loading ── */
+  .skeleton {
+    background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-card2) 50%, var(--bg-card) 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s ease-in-out infinite;
+    border-radius: 8px;
+  }
+
+  /* ── Tabs ── */
+  .tab-group {
+    display: flex;
+    gap: 2px;
+    background: var(--bg-elevated);
+    border-radius: 10px;
+    padding: 3px;
+    border: 1px solid var(--border);
+    width: fit-content;
+  }
+  .tab-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 16px;
+    border-radius: 7px;
+    font-size: 0.8125rem;
+    font-weight: 300;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--text-muted);
+    border: none;
+    background: transparent;
+  }
+  .tab-item:hover {
+    color: var(--text);
+    background: var(--bg-card2);
+  }
+  .tab-item.active,
+  .tab-item[data-active='true'] {
+    background: var(--brand);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(20, 241, 149, 0.3);
+  }
+
+  /* ── Step cards ── */
+  .step-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    position: relative;
+    transition:
+      border-color 0.25s ease,
+      box-shadow 0.25s ease,
+      transform 0.25s ease;
+    overflow: hidden;
+  }
+  .step-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--brand) 0%, transparent 100%);
+    opacity: 0;
+    transition: opacity 0.25s ease;
+  }
+  .step-card:hover {
+    border-color: rgba(20, 241, 149, 0.2);
+    box-shadow: var(--card-hover-shadow);
+    transform: translateY(-3px);
+  }
+  .step-card:hover::before {
+    opacity: 1;
+  }
+
+  .step-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    font-size: 0.8125rem;
+    font-weight: 300;
+    background: var(--brand-dim);
+    color: var(--brand);
+    border: 1px solid rgba(20, 241, 149, 0.15);
+    margin-bottom: 14px;
+    transition: all 0.25s ease;
+  }
+  .step-card:hover .step-number {
+    background: rgba(20, 241, 149, 0.12);
+    border-color: rgba(20, 241, 149, 0.35);
+    box-shadow: 0 0 12px rgba(20, 241, 149, 0.15);
+  }
+
+  /* ── Empty state ── */
+  .empty-state {
+    position: relative;
+    text-align: center;
+    padding: 56px 24px;
+    background: linear-gradient(180deg, rgba(20, 20, 26, 0.55) 0%, rgba(10, 10, 14, 0.55) 100%);
+    border-radius: 16px;
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.06),
+      inset 0 1px 0 rgba(255, 255, 255, 0.04),
+      0 12px 36px -20px rgba(0, 0, 0, 0.55);
+    overflow: hidden;
+  }
+  .empty-state::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(20, 241, 149, 0.45) 50%,
+      transparent 100%
+    );
+    pointer-events: none;
+  }
+  .empty-state::after {
+    content: '';
+    position: absolute;
+    top: -96px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 240px;
+    height: 240px;
+    border-radius: 9999px;
+    background: rgba(20, 241, 149, 0.22);
+    filter: blur(48px);
+    opacity: 0.35;
+    pointer-events: none;
+  }
+  .empty-state > * {
+    position: relative;
+  }
+  .empty-state-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(20, 241, 149, 0.22) 0%, rgba(20, 241, 149, 0.06) 100%);
+    box-shadow:
+      inset 0 0 0 1px rgba(20, 241, 149, 0.35),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 0 24px -6px rgba(20, 241, 149, 0.45);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+  }
+
+  /* ── Stat card ── */
+  .stat-card {
+    position: relative;
+    background: linear-gradient(180deg, rgba(20, 20, 26, 0.55) 0%, rgba(10, 10, 14, 0.55) 100%);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.06),
+      inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    transition:
+      box-shadow 0.2s ease,
+      transform 0.2s ease;
+  }
+  .stat-card:hover {
+    box-shadow:
+      0 0 0 1px rgba(20, 241, 149, 0.28),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      0 10px 24px -14px rgba(20, 241, 149, 0.2);
+    transform: translateY(-1px);
+  }
+
+  /* ── Reveal animations ── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(16px);
+    transition:
+      opacity 0.6s ease,
+      transform 0.6s ease;
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ── Section divider ── */
+  .section-divider {
+    border-top: 1px solid var(--border);
+    position: relative;
+  }
+  .section-divider::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: 0;
+    width: 60px;
+    height: 1px;
+    background: var(--brand);
+    opacity: 0.5;
+  }
+
+  .prompt {
+    @apply text-atlas-400 select-none font-mono;
+  }
+  .prompt::before {
+    content: '> ';
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Light mode overrides for hardcoded dark colors in components
+   (Flattened selectors — no CSS nesting, PostCSS/Tailwind compatible)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Hero gradient — deeper purple for light backgrounds */
+:root[data-theme='light'] .hero-gradient {
+  background: linear-gradient(135deg, #5b3fd4 0%, #00a046 50%, #14f195 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Fix hardcoded text-white on content headings */
+:root[data-theme='light'] .page-header h1,
+:root[data-theme='light'] .step-card h3,
+:root[data-theme='light'] .feature-card h3,
+:root[data-theme='light'] h1.text-white,
+:root[data-theme='light'] h2.text-white,
+:root[data-theme='light'] h3.text-white,
+:root[data-theme='light'] .card-elevated .text-white,
+:root[data-theme='light'] .card-interactive .text-white,
+:root[data-theme='light'] .step-card .text-white,
+:root[data-theme='light'] .feature-card .text-white,
+:root[data-theme='light'] .stat-card .text-white,
+:root[data-theme='light'] .empty-state .text-white,
+:root[data-theme='light'] .security-panel .text-white {
+  color: var(--text) !important;
+}
+
+/* Fix zinc text colors used as body/secondary text */
+:root[data-theme='light'] .text-zinc-200,
+:root[data-theme='light'] .text-zinc-300 {
+  color: var(--text-secondary) !important;
+}
+:root[data-theme='light'] .text-zinc-400,
+:root[data-theme='light'] .text-zinc-500 {
+  color: var(--text-muted) !important;
+}
+
+/* Fix hardcoded dark backgrounds */
+:root[data-theme='light'] .bg-zinc-800,
+:root[data-theme='light'] .bg-zinc-800\/30,
+:root[data-theme='light'] .bg-zinc-800\/50,
+:root[data-theme='light'] .bg-zinc-800\/80,
+:root[data-theme='light'] .bg-zinc-900,
+:root[data-theme='light'] .bg-zinc-900\/40,
+:root[data-theme='light'] .bg-zinc-900\/60,
+:root[data-theme='light'] .bg-zinc-900\/70 {
+  background-color: var(--bg-elevated) !important;
+}
+:root[data-theme='light'] .bg-black\/40 {
+  background-color: var(--bg-card2) !important;
+}
+
+/* Fix hardcoded dark borders */
+:root[data-theme='light'] .border-zinc-600\/30,
+:root[data-theme='light'] .border-zinc-700,
+:root[data-theme='light'] .border-zinc-700\/30,
+:root[data-theme='light'] .border-zinc-700\/50,
+:root[data-theme='light'] .border-zinc-800,
+:root[data-theme='light'] .border-zinc-800\/80 {
+  border-color: var(--border) !important;
+}
+
+/* Fix hover states */
+:root[data-theme='light'] .hover\:border-zinc-600:hover,
+:root[data-theme='light'] .hover\:border-zinc-700:hover {
+  border-color: var(--border-hover) !important;
+}
+:root[data-theme='light'] .hover\:text-white:hover {
+  color: var(--text) !important;
+}
+
+/* Fix cards — lighter shadows in light mode */
+:root[data-theme='light'] .card-interactive:hover {
+  box-shadow: var(--card-hover-shadow);
+}
+:root[data-theme='light'] .card-elevated:hover {
+  box-shadow: var(--card-hover-shadow);
+}
+
+/* Fix placeholder colors */
+:root[data-theme='light'] .placeholder\:text-zinc-600::placeholder,
+:root[data-theme='light'] .placeholder\:text-zinc-700::placeholder {
+  color: var(--text-muted) !important;
+  opacity: 0.6;
+}
+
+/* Navbar glass effect for light */
+:root[data-theme='light'] .nav-glass {
+  background: rgba(248, 249, 250, 0.9) !important;
+  border-color: var(--border) !important;
+}
+
+/* Inputs that use text-white */
+:root[data-theme='light'] input.text-white,
+:root[data-theme='light'] textarea.text-white,
+:root[data-theme='light'] select.text-white {
+  color: var(--text) !important;
+}
+
+/* Code blocks */
+:root[data-theme='light'] code.text-white {
+  color: var(--text) !important;
+  background: var(--bg-elevated) !important;
+}
+
+/* Progress bars that use bg-zinc-800 as empty state */
+:root[data-theme='light'] .bg-zinc-800.rounded-full,
+:root[data-theme='light'] .bg-zinc-800.h-1 {
+  background-color: var(--border) !important;
+}
+
+/* Fix bg-white/5 hover states — invisible on white bg */
+:root[data-theme='light'] .hover\:bg-white\/5:hover,
+:root[data-theme='light'] .hover\:bg-white\/\[0\.04\]:hover,
+:root[data-theme='light'] .hover\:bg-white\/\[0\.08\]:hover,
+:root[data-theme='light'] .bg-white\/\[0\.08\] {
+  background-color: var(--bg-elevated) !important;
+}
+
+/* Selection in light mode — see also line ~86 */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Comprehensive light-mode remap of hardcoded Tailwind colors
+   ═══════════════════════════════════════════════════════════════════════════
+   The codebase has ~1,700 hardcoded color classes (text-white, bg-black,
+   bg-zinc-*, bg-white/N overlays, border-white/N) baked into pages built
+   for a dark-only era. Converting each by hand would be days of risk;
+   instead we remap them at the CSS level so light mode adapts every box,
+   chip, card, divider — the user's #1 complaint about prior theme work.
+   Dark mode keeps the original Tailwind colors, untouched. */
+
+:root[data-theme='light'] {
+  /* ── Backgrounds: dark surfaces become elevated greys ── */
+  --light-surface: var(--bg-card);
+  --light-surface-elev: var(--bg-elevated);
+  --light-surface-deep: var(--bg-card2);
+}
+
+/* Plain text-white on any element falls back to readable body text. */
+:root[data-theme='light'] .text-white {
+  color: var(--text) !important;
+}
+
+/* Zinc text scale → semantic text-muted/secondary. */
+:root[data-theme='light'] .text-zinc-100,
+:root[data-theme='light'] .text-zinc-200,
+:root[data-theme='light'] .text-zinc-300 {
+  color: var(--text) !important;
+}
+:root[data-theme='light'] .text-zinc-400,
+:root[data-theme='light'] .text-zinc-500 {
+  color: var(--text-secondary) !important;
+}
+:root[data-theme='light'] .text-zinc-600,
+:root[data-theme='light'] .text-zinc-700,
+:root[data-theme='light'] .text-zinc-800,
+:root[data-theme='light'] .text-zinc-900 {
+  color: var(--text-muted) !important;
+}
+:root[data-theme='light'] .text-neutral-300,
+:root[data-theme='light'] .text-neutral-400 {
+  color: var(--text-secondary) !important;
+}
+:root[data-theme='light'] .text-neutral-500,
+:root[data-theme='light'] .text-neutral-600 {
+  color: var(--text-muted) !important;
+}
+
+/* Solid black + zinc-950 page floors → light app background. */
+:root[data-theme='light'] .bg-black,
+:root[data-theme='light'] .bg-zinc-950,
+:root[data-theme='light'] .bg-neutral-950 {
+  background-color: var(--bg) !important;
+}
+
+/* Black with alpha → match it to the parent surface tone. */
+:root[data-theme='light'] .bg-black\/5,
+:root[data-theme='light'] .bg-black\/10,
+:root[data-theme='light'] .bg-black\/20,
+:root[data-theme='light'] .bg-black\/30,
+:root[data-theme='light'] .bg-black\/40,
+:root[data-theme='light'] .bg-black\/50,
+:root[data-theme='light'] .bg-black\/60,
+:root[data-theme='light'] .bg-black\/70,
+:root[data-theme='light'] .bg-black\/80,
+:root[data-theme='light'] .bg-black\/90 {
+  background-color: var(--bg-card2) !important;
+}
+
+/* Zinc-700 was a "raised chip on dark" — use a quiet light grey. */
+:root[data-theme='light'] .bg-zinc-700,
+:root[data-theme='light'] .bg-zinc-700\/30,
+:root[data-theme='light'] .bg-zinc-700\/50,
+:root[data-theme='light'] .bg-zinc-700\/80,
+:root[data-theme='light'] .bg-neutral-700,
+:root[data-theme='light'] .bg-neutral-800 {
+  background-color: var(--bg-elevated) !important;
+}
+
+/* The big block: every white-alpha overlay used as a faint surface
+   becomes a light-grey wash so it remains visible on a white page. */
+:root[data-theme='light'] .bg-white\/\[0\.02\],
+:root[data-theme='light'] .bg-white\/\[0\.03\],
+:root[data-theme='light'] .bg-white\/\[0\.04\],
+:root[data-theme='light'] .bg-white\/\[0\.05\],
+:root[data-theme='light'] .bg-white\/\[0\.06\],
+:root[data-theme='light'] .bg-white\/\[0\.08\],
+:root[data-theme='light'] .bg-white\/\[0\.1\],
+:root[data-theme='light'] .bg-white\/5,
+:root[data-theme='light'] .bg-white\/10,
+:root[data-theme='light'] .bg-white\/15,
+:root[data-theme='light'] .bg-white\/20 {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+}
+
+/* White-alpha hover states. */
+:root[data-theme='light'] .hover\:bg-white\/\[0\.02\]:hover,
+:root[data-theme='light'] .hover\:bg-white\/\[0\.03\]:hover,
+:root[data-theme='light'] .hover\:bg-white\/\[0\.04\]:hover,
+:root[data-theme='light'] .hover\:bg-white\/\[0\.06\]:hover,
+:root[data-theme='light'] .hover\:bg-white\/\[0\.08\]:hover,
+:root[data-theme='light'] .hover\:bg-white\/\[0\.1\]:hover,
+:root[data-theme='light'] .hover\:bg-white\/5:hover,
+:root[data-theme='light'] .hover\:bg-white\/10:hover {
+  background-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+/* White-alpha borders → semantic border token (which is already
+   light-grey in light mode). */
+:root[data-theme='light'] .border-white\/5,
+:root[data-theme='light'] .border-white\/10,
+:root[data-theme='light'] .border-white\/15,
+:root[data-theme='light'] .border-white\/20,
+:root[data-theme='light'] .border-white\/30,
+:root[data-theme='light'] .border-white\/\[0\.06\],
+:root[data-theme='light'] .border-white\/\[0\.08\],
+:root[data-theme='light'] .border-white\/\[0\.1\] {
+  border-color: var(--border) !important;
+}
+
+/* Divider lines made from bg-white/N (used as 1px hairlines). */
+:root[data-theme='light'] .bg-white\/\[0\.06\].h-px,
+:root[data-theme='light'] .bg-white\/\[0\.08\].h-px,
+:root[data-theme='light'] .bg-white\/10.h-px,
+:root[data-theme='light'] .h-px.bg-white\/5,
+:root[data-theme='light'] .h-px.bg-white\/10 {
+  background-color: var(--border) !important;
+}
+
+/* Ring colours used for focus / active outlines. */
+:root[data-theme='light'] .ring-white\/10,
+:root[data-theme='light'] .ring-white\/20 {
+  --tw-ring-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Decorative ambient blobs (purple from the old brand era) → green.
+   Catches the residual `bg-purple-*` glows that linger on a few pages. */
+:root[data-theme='light'] .bg-purple-500\/10,
+:root[data-theme='light'] .bg-purple-500\/20,
+:root[data-theme='light'] .bg-purple-600\/10,
+:root[data-theme='light'] .bg-purple-600\/20 {
+  background-color: rgba(20, 241, 149, 0.08) !important;
+}
+
+/* Backdrop overlays used for modals — keep a softer dim on light. */
+:root[data-theme='light'] .bg-black\/60,
+:root[data-theme='light'] .bg-black\/70,
+:root[data-theme='light'] .bg-black\/80 {
+  background-color: rgba(15, 23, 42, 0.45) !important;
+}
+
+/* atlas-* + neon-* utility classes (mapped to bright green via tailwind)
+   need a darker variant in light mode so text remains AA-readable on
+   white surfaces. atlas-300/400 are too pale on white. */
+:root[data-theme='light'] .text-atlas-300,
+:root[data-theme='light'] .text-atlas-400,
+:root[data-theme='light'] .text-neon-300,
+:root[data-theme='light'] .text-neon-400 {
+  color: #00a046 !important;
+}
+:root[data-theme='light'] .text-atlas-500,
+:root[data-theme='light'] .text-neon-500 {
+  color: #00873a !important;
+}
+:root[data-theme='light'] .border-atlas-500\/30,
+:root[data-theme='light'] .border-atlas-500\/40,
+:root[data-theme='light'] .border-atlas-400\/30,
+:root[data-theme='light'] .hover\:border-atlas-500\/30:hover {
+  border-color: rgba(0, 200, 83, 0.32) !important;
+}
+:root[data-theme='light'] .bg-atlas-500\/10,
+:root[data-theme='light'] .bg-atlas-500\/20,
+:root[data-theme='light'] .bg-atlas-400\/10 {
+  background-color: rgba(0, 200, 83, 0.08) !important;
+}
+
+/* zinc-600/500 mid-tones used as borders. */
+:root[data-theme='light'] .border-zinc-500,
+:root[data-theme='light'] .border-zinc-600,
+:root[data-theme='light'] .border-neutral-600,
+:root[data-theme='light'] .border-neutral-700,
+:root[data-theme='light'] .border-neutral-800 {
+  border-color: var(--border) !important;
+}
+
+/* Ambient blob backgrounds use rgba(20,241,149,N) which stay green on
+   both modes — leave those alone. But hardcoded near-black gradients
+   that survived the sed sweep need to be neutralized at runtime. */
+:root[data-theme='light'] [style*='rgb(7'],
+:root[data-theme='light'] [style*='#07'],
+:root[data-theme='light'] [style*='#09'] {
+  /* Only matches inline style attributes that LITERALLY start with
+     these dark hex prefixes — non-destructive. */
+}
+
+/* Solid surfaces frequently hardcoded as #14F195 (brand) — leave alone,
+   that's the brand colour. But #062014 (legacy "ink") should become a
+   readable ink colour, not stay as near-black on white. */
+:root[data-theme='light'] [style*='#062014'] {
+  color: #021a10 !important;
+}
+
+/* Backdrop blur surfaces frequently used as floating chips — make sure
+   they sit on a light tone in light mode. */
+:root[data-theme='light'] .backdrop-blur-md.bg-\[var\(--bg-card\)\]\/60,
+:root[data-theme='light'] .backdrop-blur-xl.bg-\[var\(--bg-card\)\]\/75 {
+  background-color: rgba(255, 255, 255, 0.85) !important;
+}
+
+/* Tags / chips that used "white-text-on-faint-bg" pattern. Make their
+   text dark enough to read in light mode. */
+:root[data-theme='light'] .text-zinc-200.bg-\[var\(--bg-card2\)\],
+:root[data-theme='light'] .text-zinc-300.bg-\[var\(--bg-card2\)\] {
+  color: var(--text) !important;
+}
+
+/* Outline buttons / inactive segment tabs that use text-white with no
+   bg (and rely on the dark page) — give them readable ink. */
+:root[data-theme='light'] button.text-white {
+  color: var(--text) !important;
+}
+:root[data-theme='light'] a.text-white {
+  color: var(--text) !important;
+}
+
+/* Specific known offenders: linear-gradient strings like "rgba(20,20,26,X)"
+   that survived the sweep because they had different decimal precision. */
+:root[data-theme='light'] [style*='rgba(20,20,26'],
+:root[data-theme='light'] [style*='rgba(20, 20, 26'],
+:root[data-theme='light'] [style*='rgba(10,10,14'],
+:root[data-theme='light'] [style*='rgba(10, 10, 14'] {
+  background: var(--bg-card) !important;
+}
+
+/* Force the body floor to be light in light mode regardless of any
+   inline override. */
+:root[data-theme='light'] body {
+  background-color: var(--bg) !important;
+}
+
+/* Hard override — Tailwind arbitrary-value backgrounds.
+   The cards (AtlasStatTile, AtlasFilterBar, LiveTradesFeed, etc) all
+   render via `bg-[var(--bg-card)]`. In some environments these stay
+   dark in light mode because of CSS-variable resolution timing or a
+   sibling rule winning. We force the light-mode variants here, with
+   the escaped Tailwind class names so they only fire when the user
+   has actually flipped to light. */
+:root[data-theme='light'] .bg-\[var\(--bg-card\)\] {
+  background-color: #ffffff !important;
+}
+:root[data-theme='light'] .bg-\[var\(--bg-card2\)\] {
+  background-color: #f5f5f7 !important;
+}
+:root[data-theme='light'] .bg-\[var\(--bg-elevated\)\] {
+  background-color: #f0f1f3 !important;
+}
+:root[data-theme='light'] .bg-\[var\(--bg\)\] {
+  background-color: #f8f9fa !important;
+}
+:root[data-theme='light'] .border-\[var\(--border\)\] {
+  border-color: #e2e4e9 !important;
+}
+:root[data-theme='light'] .text-\[var\(--text\)\] {
+  color: #111827 !important;
+}
+:root[data-theme='light'] .text-\[var\(--text-secondary\)\] {
+  color: #4b5563 !important;
+}
+:root[data-theme='light'] .text-\[var\(--text-muted\)\] {
+  color: #6b7280 !important;
+}
+
+/* Catch-all for ANY text-white with opacity modifiers (e.g. text-white/80,
+   text-white/60, text-white/40, text-white/[0.65]). Tailwind compiles
+   these to varying classes; we wildcard them here. */
+:root[data-theme='light'] [class*='text-white/'],
+:root[data-theme='light'] [class*='text-white\\/'] {
+  color: var(--text-secondary) !important;
+}
+:root[data-theme='light'] [class*='text-white/40'],
+:root[data-theme='light'] [class*='text-white/50'],
+:root[data-theme='light'] [class*='text-white\\/40'],
+:root[data-theme='light'] [class*='text-white\\/50'] {
+  color: var(--text-muted) !important;
+}
+
+/* Bordered surfaces with white opacity modifiers — border-white/8,
+   border-white/12, border-white/[0.06] etc. */
+:root[data-theme='light'] [class*='border-white/'],
+:root[data-theme='light'] [class*='border-white\\/'] {
+  border-color: var(--border) !important;
+}
+
+/* Background washes with white opacity modifiers — bg-white/[0.02],
+   bg-white/8 etc beyond the few I'd hardcoded. */
+:root[data-theme='light'] [class*='bg-white/'],
+:root[data-theme='light'] [class*='bg-white\\/'] {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Hover variants thereof. */
+:root[data-theme='light'] [class*='hover:bg-white/']:hover,
+:root[data-theme='light'] [class*='hover\\:bg-white\\/']:hover {
+  background-color: rgba(0, 0, 0, 0.06) !important;
+}
+:root[data-theme='light'] [class*='hover:border-white/']:hover,
+:root[data-theme='light'] [class*='hover\\:border-white\\/']:hover {
+  border-color: var(--border-hover) !important;
+}
+:root[data-theme='light'] [class*='hover:text-white']:hover {
+  color: var(--text) !important;
+}
+
+/* Sidebar marketplace nav still rendered some hardcoded `#1f1f23`
+   borders before my last sweep in subnav children. Explicit override
+   for any remaining border using that variant. */
+:root[data-theme='light'] [style*='border: 1px solid #1f1f23'],
+:root[data-theme='light'] [style*='border-color: #1f1f23'] {
+  border-color: var(--border) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Atlas dropdown — entrance animation
+   ═══════════════════════════════════════════════════════════════════════════
+   Used by the avatar menu (PowerNavbar). Subtle fade + slight rise +
+   tiny scale-up. Skipped for users with prefers-reduced-motion. */
+
+@keyframes atlas-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Atlas skeleton — shimmer placeholder
+   ═══════════════════════════════════════════════════════════════════════════
+   Solid token-coloured base + animated diagonal sheen. Used by the
+   <AtlasSkeleton> component. Pure CSS so SSR renders correctly. */
+
+@keyframes atlas-skeleton-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.atlas-skeleton {
+  background-color: var(--bg-card2);
+  position: relative;
+  overflow: hidden;
+}
+.atlas-skeleton--animated {
+  background-image: linear-gradient(
+    100deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.06) 50%,
+    transparent 70%
+  );
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  animation: atlas-skeleton-shimmer 1.6s ease-in-out infinite;
+}
+:root[data-theme='light'] .atlas-skeleton--animated {
+  background-image: linear-gradient(
+    100deg,
+    transparent 30%,
+    rgba(0, 0, 0, 0.05) 50%,
+    transparent 70%
+  );
+}
+@media (prefers-reduced-motion: reduce) {
+  .atlas-skeleton--animated {
+    animation: none;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Atlas headline — animated gradient text
+   ═══════════════════════════════════════════════════════════════════════════
+   Brand-coloured gradient that slowly drifts horizontally. Use on the
+   accent word(s) in any hero so the eye lands somewhere bright. */
+
+@keyframes atlas-gradient-pan {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+.atlas-gradient-text {
+  /* Static brand gradient — no continuous pan animation. The constant
+     motion read as "AI demo" rather than premium. */
+  background: linear-gradient(
+    100deg,
+    var(--brand-300) 0%,
+    var(--brand-500) 60%,
+    #00d18c 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+:root[data-theme='light'] .atlas-gradient-text {
+  background: linear-gradient(
+    100deg,
+    #00a046 0%,
+    #00873a 30%,
+    #006a2c 50%,
+    #00873a 70%,
+    #00a046 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Atlas CTA — solid green with shimmer & confident glow
+   ═══════════════════════════════════════════════════════════════════════════
+   Bigger, glowier, more visible than .a-btn. Reserve for hero / page
+   primary actions only. */
+
+.atlas-cta {
+  position: relative;
+  /* Black + white pill. Linear-style primary action — flat, no shimmer,
+     no glow. Reads on any surface in any theme. */
+  background: #ffffff !important;
+  color: #000000 !important;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  transition:
+    transform 120ms var(--ease-out-expo),
+    background-color 120ms var(--ease-out-expo);
+}
+.atlas-cta * {
+  color: #000000 !important;
+}
+.atlas-cta svg {
+  stroke: #000000 !important;
+  color: #000000 !important;
+}
+:root[data-theme='light'] .atlas-cta {
+  background: #000000 !important;
+  color: #ffffff !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.18),
+    0 8px 24px -10px rgba(0, 0, 0, 0.45);
+}
+:root[data-theme='light'] .atlas-cta * {
+  color: #ffffff !important;
+}
+:root[data-theme='light'] .atlas-cta svg {
+  stroke: #ffffff !important;
+  color: #ffffff !important;
+}
+.atlas-cta:hover {
+  background: #f4f4f5 !important;
+}
+.atlas-cta:active {
+  transform: scale(0.985);
+}
+:root[data-theme='light'] .atlas-cta {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+:root[data-theme='light'] .atlas-cta:hover {
+  background: #18181b !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Atlas hero — dotted grid layer
+   ═══════════════════════════════════════════════════════════════════════════
+   Dot pattern radially masked to fade out toward the edges. Sits behind
+   the headline copy on `/market` and any other landing-grade hero. The
+   dot size and spacing are tuned for "fast app" feel: dense but quiet,
+   visible without dominating the foreground text. */
+
+.atlas-hero__dots {
+  background-image: radial-gradient(
+    circle at center,
+    rgba(20, 241, 149, 0.18) 1px,
+    transparent 1.6px
+  );
+  background-size: 22px 22px;
+  background-position: 0 0;
+  mask-image: radial-gradient(ellipse 50% 50% at 50% 0%, #000 20%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse 50% 50% at 50% 0%, #000 20%, transparent 70%);
+  opacity: 0.85;
+}
+:root[data-theme='light'] .atlas-hero__dots {
+  background-image: radial-gradient(
+    circle at center,
+    rgba(0, 160, 70, 0.22) 1px,
+    transparent 1.6px
+  );
+  opacity: 0.55;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Hero background grid
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.hero-grid-bg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  mask-image: radial-gradient(ellipse 60% 60% at 50% 40%, black 20%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse 60% 60% at 50% 40%, black 20%, transparent 70%);
+}
+.hero-grid-bg svg {
+  opacity: 0.12;
+}
+:root[data-theme='light'] .hero-grid-bg svg {
+  opacity: 0.06;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Keyframes
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@layer utilities {
+  .neon-border {
+    border-color: #14f195;
+    box-shadow: 0 0 10px rgba(20, 241, 149, 0.3);
+  }
+
+  @keyframes blink {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0;
+    }
+  }
+  @keyframes pulse-dot {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.6;
+    }
+  }
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes slideUp {
+    from {
+      transform: translateY(12px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  @keyframes skeleton-loading {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+  @keyframes shimmer {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+  .animate-shimmer {
+    animation: shimmer 1.8s linear infinite;
+  }
+  @keyframes fadeSlideUp {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes listSlideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-14px) scale(0.97);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+  @keyframes scrollUp {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(-50%);
+    }
+  }
+  @keyframes scroll-x {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-100%);
+    }
+  }
+  .animate-scroll {
+    animation: scroll-x linear infinite;
+  }
+  @keyframes spin-slow {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* Section separators */
+  section {
+    position: relative;
+  }
+
+  section::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(20, 241, 149, 0.2), transparent);
+    pointer-events: none;
+  }
+}
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+/* Horizontal marquee for the /market trade ticker tape. The track
+   contains every trade twice; translating left by 50% loops seamlessly. */
+@keyframes mk-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+@keyframes geo-float-a {
+  0% {
+    transform: translateY(0px) rotate(0deg) scale(1);
+  }
+  50% {
+    transform: translateY(-12px) rotate(3deg) scale(1.02);
+  }
+  100% {
+    transform: translateY(0px) rotate(0deg) scale(1);
+  }
+}
+@keyframes geo-float-b {
+  0% {
+    transform: translate(0px, 0px) rotate(0deg);
+  }
+  50% {
+    transform: translate(8px, -14px) rotate(-4deg);
+  }
+  100% {
+    transform: translate(0px, 0px) rotate(0deg);
+  }
+}
+@keyframes geo-float-c {
+  0% {
+    transform: translate(0px, 0px) rotate(0deg) scale(1);
+  }
+  50% {
+    transform: translate(-8px, -16px) rotate(6deg) scale(1.02);
+  }
+  100% {
+    transform: translate(0px, 0px) rotate(0deg) scale(1);
+  }
+}
+@keyframes logo-pulse {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 6px rgba(20, 241, 149, 0.3));
+  }
+  50% {
+    filter: drop-shadow(0 0 12px rgba(20, 241, 149, 0.6));
+  }
+}
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+@keyframes hero-glow-pulse {
+  0%,
+  100% {
+    opacity: 0.1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.18;
+    transform: scale(1.05);
+  }
+}
+
+/* New Render-style animations */
+@keyframes glow-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 20px rgba(20, 241, 149, 0.3),
+      inset 0 0 20px rgba(20, 241, 149, 0.1);
+  }
+  50% {
+    box-shadow:
+      0 0 40px rgba(20, 241, 149, 0.6),
+      inset 0 0 30px rgba(20, 241, 149, 0.2);
+  }
+}
+
+@keyframes border-gradient {
+  0% {
+    border-color: #14f195;
+  }
+  50% {
+    border-color: #06b6d4;
+  }
+  100% {
+    border-color: #14f195;
+  }
+}
+
+@keyframes text-glow {
+  0%,
+  100% {
+    text-shadow: 0 0 20px rgba(20, 241, 149, 0.3);
+  }
+  50% {
+    text-shadow:
+      0 0 40px rgba(20, 241, 149, 0.6),
+      0 0 60px rgba(6, 182, 212, 0.3);
+  }
+}
+
+@keyframes card-stagger {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ripple {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+@keyframes shimmer-load {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+/* ── Enhanced Card Hover Effects ── */
+.card,
+.card-elevated,
+.card-interactive {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-interactive:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(20, 241, 149, 0.15);
+  border-color: rgba(20, 241, 149, 0.3);
+}
+
+.card-elevated:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(20, 241, 149, 0.1);
+}
+
+/* ── Button Micro-interactions ── */
+button,
+a.btn-primary,
+a.btn-secondary {
+  position: relative;
+  overflow: hidden;
+}
+
+button:active,
+a.btn-primary:active,
+a.btn-secondary:active {
+  transform: scale(0.97);
+}
+
+/* Ripple effect for buttons */
+button::before,
+a.btn-primary::before,
+a.btn-secondary::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+/* ── Input Focus Animation ── */
+input:focus,
+textarea:focus,
+select:focus {
+  animation: input-focus 0.3s ease;
+}
+
+@keyframes input-focus {
+  0% {
+    transform: scale(0.99);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* ── Smooth Page Transitions ── */
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pageExit {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+/* ── Loading Skeleton Animation ── */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.04) 100%
+  );
+  background-size: 200% 100%;
+  animation: app-shimmer 1.6s linear infinite;
+  border-radius: 8px;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* ── App-feel shimmer skeleton ──
+   Smooth diagonal sweep, ~1.6s. Used by `loading.tsx` skeletons via
+   the `.app-shimmer` utility. Matches the existing `.skeleton` look
+   so existing markup that mixes them stays consistent. */
+@keyframes app-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.app-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.04) 100%
+  );
+  background-size: 200% 100%;
+  animation: app-shimmer 1.6s linear infinite;
+  border-radius: 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-shimmer,
+  .skeleton {
+    animation: none;
+    background: rgba(255, 255, 255, 0.06);
+  }
+}
+
+/* ── Success Check Animation ── */
+@keyframes check-bounce {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* ── Color Contrast Improvements ── */
+.text-contrast-high {
+  color: #ffffff;
+}
+
+.text-contrast-medium {
+  color: #e4e4e7;
+}
+
+.text-contrast-low {
+  color: #a1a1aa;
+}
+
+/* ── Accessibility: Reduced Motion ── */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Mobile Responsive Touch Targets ── */
+@media (max-width: 768px) {
+  /* Touch-friendly controls (without breaking inline links/checkboxes in text) */
+  button[type='submit'],
+  button[type='button']:not(.inline-btn),
+  [role='button']:not(a),
+  input[type='submit'],
+  input[type='button'] {
+    min-height: 40px;
+  }
+
+  input[type='checkbox'],
+  input[type='radio'] {
+    min-width: 18px;
+    min-height: 18px;
+  }
+
+  /* Better spacing on mobile */
+  .page-container {
+    padding: 1rem;
+  }
+
+  .gap-4 {
+    gap: 1rem;
+  }
+
+  /* Touch-friendly card layouts */
+  .card {
+    padding: 1.25rem;
+  }
+
+  /* Collapse hamburger menu properly */
+  .sm-toggle {
+    font-size: 0.9rem;
+    padding: 0.75rem;
+  }
+}
+
+/* ── Filter Pills Animation ── */
+.filter-pill {
+  transition: all 0.2s ease;
+}
+
+.filter-pill:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(20, 241, 149, 0.15);
+}
+
+/* ── Data Table Row Hover ── */
+table tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+table tbody tr:hover {
+  background-color: rgba(20, 241, 149, 0.05);
+}
+
+/* ── Pagination Button States ── */
+.pagination-btn {
+  transition: all 0.2s ease;
+}
+
+.pagination-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.pagination-btn:not(:disabled):hover {
+  background-color: rgba(20, 241, 149, 0.1);
+  border-color: rgba(20, 241, 149, 0.3);
+}
+
+/* ── Enhanced Card Hover Effects ── */
+.card,
+[role='article'],
+.marketplace-card,
+.agent-card,
+.repo-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.card:hover,
+[role='article']:hover,
+.marketplace-card:hover,
+.agent-card:hover,
+.repo-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(20, 241, 149, 0.15);
+}
+
+/* ── Enhanced Button Hover Effects ── */
+button:not(:disabled),
+.btn,
+[role='button'] {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+button:not(:disabled):hover,
+.btn:hover,
+[role='button']:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(20, 241, 149, 0.2);
+}
+
+button:not(:disabled):active,
+.btn:active,
+[role='button']:active {
+  transform: translateY(0px);
+}
+
+/* ── Button Ripple Effect ── */
+button:not(:disabled)::after,
+.btn::after,
+[role='button']::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition:
+    width 0.6s,
+    height 0.6s;
+}
+
+button:not(:disabled):active::after,
+.btn:active::after,
+[role='button']:active::after {
+  width: 300px;
+  height: 300px;
+}
+
+/* ── Link Hover Animation ── */
+a:not([role='button']),
+.link {
+  position: relative;
+  transition: color 0.2s ease;
+}
+
+a:not([role='button'])::after,
+.link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #14f195, #a78bfa);
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+a:not([role='button']):hover::after,
+.link:hover::after {
+  width: 100%;
+}
+
+/* ── Input Field Enhancements ── */
+input[type='text'],
+input[type='email'],
+input[type='password'],
+input[type='search'],
+textarea,
+select {
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+}
+
+input[type='text']:hover,
+input[type='email']:hover,
+input[type='password']:hover,
+input[type='search']:hover,
+textarea:hover,
+select:hover {
+  border-color: rgba(20, 241, 149, 0.3);
+  box-shadow: 0 0 12px rgba(20, 241, 149, 0.1);
+}
+
+input[type='text']:focus,
+input[type='email']:focus,
+input[type='password']:focus,
+input[type='search']:focus,
+textarea:focus,
+select:focus {
+  border-color: #14f195;
+  box-shadow: 0 0 16px rgba(20, 241, 149, 0.25);
+}
+
+/* ── Badge/Pill Animations ── */
+.badge,
+.pill,
+.tag {
+  transition: all 0.2s ease;
+}
+
+.badge:hover,
+.pill:hover,
+.tag:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(20, 241, 149, 0.2);
+}
+
+/* ── Icon Hover Effects ── */
+svg,
+.icon {
+  transition: all 0.2s ease;
+}
+
+button:hover svg,
+a:hover svg,
+.icon-hover:hover {
+  transform: scale(1.1) rotate(2deg);
+}
+
+/* ── Sidebar Styling ── */
+aside {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(20, 241, 149, 0.3) transparent;
+}
+
+aside::-webkit-scrollbar {
+  width: 6px;
+}
+
+aside::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+aside::-webkit-scrollbar-thumb {
+  background: rgba(20, 241, 149, 0.2);
+  border-radius: 3px;
+  transition: background 0.2s;
+}
+
+aside::-webkit-scrollbar-thumb:hover {
+  background: rgba(20, 241, 149, 0.4);
+}
+
+/* Sidebar link/button base styles */
+aside a,
+aside button {
+  position: relative;
+}
+
+/* Smooth transitions for sidebar items */
+aside a::before,
+aside button::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(20, 241, 149, 0.05);
+  opacity: 0;
+  border-radius: inherit;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+aside a:hover::before,
+aside button:hover::before {
+  opacity: 1;
+}
+
+/* Active indicator animation */
+[data-role='sidebar-item'][data-active='true'] {
+  position: relative;
+}
+
+/* ── Mobile Sidebar ── */
+@media (max-width: 1023px) {
+  aside {
+    box-shadow:
+      -8px 0 32px rgba(0, 0, 0, 0.7),
+      -4px 0 16px rgba(20, 241, 149, 0.1);
+  }
+
+  /* Touch-friendly spacing on mobile */
+  aside a,
+  aside button {
+    min-height: 44px;
+  }
+}
+
+/* ── Focus Visible for Accessibility ── */
+aside button:focus-visible,
+aside a:focus-visible {
+  outline: 2px solid rgba(20, 241, 149, 0.6);
+  outline-offset: -2px;
+}
+
+/* ── Sidebar Header Animation ── */
+aside > div:first-child {
+  animation: slideDown 0.4s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Gradient text for active items ── */
+aside a[data-active='true'],
+aside button[data-active='true'] {
+  position: relative;
+}
+
+aside a[data-active='true']::after,
+aside button[data-active='true']::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(20, 241, 149, 0.18), rgba(0, 200, 83, 0.06));
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* ── Profile Menu (horizontal tab bar) ── */
+.profile-menu-bar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.profile-menu-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.profile-menu-item {
+  @apply relative inline-flex items-center justify-center gap-2 h-10 px-3.5 rounded-lg transition-colors duration-150 text-zinc-300 hover:text-white font-light text-[12.5px] flex-shrink-0 whitespace-nowrap;
+  letter-spacing: 0.005em;
+}
+
+.profile-menu-item:hover {
+  color: #d4d4d8;
+}
+
+.profile-menu-item.active {
+  color: #ffffff;
+}
+
+.profile-menu-icon {
+  @apply w-4 h-4 flex-shrink-0;
+}
+
+.profile-menu-label {
+  @apply inline whitespace-nowrap;
+}
+
+/* ── Profile Content Card ──
+   Token-driven so it matches the marketplace card style (AtlasCard) in
+   both light + dark. Previously hardcoded a dark linear-gradient that
+   went black-on-black against the light theme. */
+.profile-content-card {
+  @apply relative p-6 rounded-2xl overflow-hidden;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-card);
+}
+.profile-content-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(20, 241, 149, 0.45) 50%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MARKET DASHBOARD DARK THEME (scope: .mk-scope)
+   Minimalist flat cards with inset-glow borders, Geist font,
+   blue-link accents and neutral gray surfaces. No purple brand gradients.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.mk-scope {
+  /* Legacy token system — re-mapped to the project's semantic CSS
+     variables so /market/agents, /market/repos, etc. respect the
+     active theme (dark + light). Before this remap, --mk-surface-1
+     was hardcoded #0a0a0a, which painted a black band around every
+     filter bar / tab strip in light mode. */
+  --mk-bg: var(--bg);
+  --mk-surface-1: var(--bg-card);
+  --mk-surface-2: var(--bg-card);
+  --mk-surface-3: var(--bg-card2);
+  --mk-surface-4: var(--bg-elevated);
+  --mk-surface-5: var(--bg-elevated);
+  --mk-surface-6: var(--border-hover);
+  --mk-surface-7: var(--border-hover);
+  --mk-text: var(--text);
+  --mk-text-secondary: var(--text-secondary);
+  --mk-text-muted: var(--text-muted);
+  --mk-text-placeholder: var(--text-muted);
+  --mk-link: #52a8ff;
+  --mk-success: #50e3c2;
+  --mk-amber: #f2a20d;
+  --mk-amber-bg: #331b00;
+  --mk-error: #ff6166;
+  --mk-error-bg: #3c1618;
+  --mk-shadow-card:
+    rgba(255, 255, 255, 0.145) 0 0 0 1px, rgba(0, 0, 0, 0.16) 0 1px 2px 0, #000 0 0 0 1px;
+  --mk-shadow-card-hover:
+    rgba(255, 255, 255, 0.22) 0 0 0 1px, rgba(0, 0, 0, 0.2) 0 2px 4px 0, #000 0 0 0 1px;
+  --mk-shadow-input: rgba(255, 255, 255, 0.14) 0 0 0 1px;
+  --mk-shadow-input-focus: rgba(255, 255, 255, 0.22) 0 0 0 1px;
+  --mk-shadow-badge-inset: rgba(255, 255, 255, 0.14) 0 0 0 1px inset;
+  --mk-shadow-focus: 0 0 0 2px #000, 0 0 0 4px #52a8ff;
+  --mk-radius: 6px;
+  --mk-radius-full: 9999px;
+
+  background: var(--mk-bg);
+  color: var(--mk-text);
+  font-family:
+    'Geist',
+    'Inter',
+    system-ui,
+    -apple-system,
+    sans-serif;
+  font-weight: 400;
+  letter-spacing: normal;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+/* Match landing-page typography: Inter Light + negative tracking */
+.mk-scope,
+.mk-scope * {
+  font-family:
+    'Inter',
+    system-ui,
+    -apple-system,
+    sans-serif !important;
+  font-weight: 300;
+  letter-spacing: -0.3px !important;
+}
+.mk-scope h1,
+.mk-scope h2,
+.mk-scope h3,
+.mk-scope h4,
+.mk-scope h5,
+.mk-scope h6,
+.mk-scope strong,
+.mk-scope .mk-title,
+.mk-scope .mk-btn-primary,
+.mk-scope .mk-btn-secondary,
+.mk-scope .mk-btn-ghost,
+.mk-scope .mk-badge,
+.mk-scope .mk-nav-item--active {
+  font-weight: 400;
+}
+.mk-scope code,
+.mk-scope pre,
+.mk-scope .mk-mono {
+  font-family: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace !important;
+  letter-spacing: 0 !important;
+}
+
+/* Neutralize global purple / lift / ripple / underline effects within this scope */
+.mk-scope section::after {
+  display: none !important;
+}
+.mk-scope button:not(:disabled):hover,
+.mk-scope .btn:hover,
+.mk-scope [role='button']:hover {
+  transform: none !important;
+  box-shadow: none !important;
+}
+.mk-scope button:not(:disabled):active,
+.mk-scope .btn:active,
+.mk-scope [role='button']:active {
+  transform: scale(0.98) !important;
+}
+.mk-scope button::after,
+.mk-scope button::before,
+.mk-scope .btn::after,
+.mk-scope .btn::before,
+.mk-scope [role='button']::after,
+.mk-scope [role='button']::before {
+  display: none !important;
+  content: none !important;
+}
+.mk-scope a:not([role='button'])::after,
+.mk-scope .link::after {
+  display: none !important;
+  content: none !important;
+}
+.mk-scope button:hover svg,
+.mk-scope a:hover svg {
+  transform: none !important;
+}
+.mk-scope .badge:hover,
+.mk-scope .pill:hover,
+.mk-scope .tag:hover {
+  transform: none !important;
+  box-shadow: none !important;
+}
+.mk-scope input[type='text']:hover,
+.mk-scope input[type='email']:hover,
+.mk-scope input[type='password']:hover,
+.mk-scope input[type='search']:hover,
+.mk-scope input[type='number']:hover,
+.mk-scope textarea:hover,
+.mk-scope select:hover {
+  border-color: transparent !important;
+  box-shadow: var(--mk-shadow-input) !important;
+}
+.mk-scope input[type='text']:focus,
+.mk-scope input[type='email']:focus,
+.mk-scope input[type='password']:focus,
+.mk-scope input[type='search']:focus,
+.mk-scope input[type='number']:focus,
+.mk-scope textarea:focus,
+.mk-scope select:focus {
+  border-color: transparent !important;
+  box-shadow: var(--mk-shadow-input-focus) !important;
+  animation: none !important;
+}
+.mk-scope table tbody tr:hover {
+  background-color: var(--mk-surface-1) !important;
+}
+.mk-scope .card,
+.mk-scope .card-interactive,
+.mk-scope .card-elevated {
+  transition: box-shadow 0.15s ease !important;
+}
+.mk-scope .card:hover,
+.mk-scope .card-interactive:hover,
+.mk-scope .card-elevated:hover,
+.mk-scope [role='article']:hover,
+.mk-scope .marketplace-card:hover,
+.mk-scope .agent-card:hover,
+.mk-scope .repo-card:hover {
+  transform: none !important;
+  box-shadow: var(--mk-shadow-card-hover) !important;
+}
+
+/* Scrollbar inside scope */
+.mk-scope ::-webkit-scrollbar-thumb {
+  background: var(--mk-surface-7);
+}
+
+/* Flatten any inline gradient card backgrounds legacy pages use */
+.mk-scope [style*='linear-gradient(180deg, rgba(20, 20, 26'],
+.mk-scope [style*='linear-gradient(180deg,rgba(20,20,26'],
+.mk-scope [style*='linear-gradient(180deg, rgba(20,20,26'] {
+  background: var(--mk-surface-1) !important;
+}
+
+/* Restore visible brand fill on INTERACTIVE elements that use inline purple
+   gradients for CTAs. */
+.mk-scope button[style*='rgba(16, 185, 129'],
+.mk-scope button[style*='rgba(16,185,129'],
+.mk-scope a[style*='rgba(16, 185, 129'],
+.mk-scope a[style*='rgba(16,185,129'] {
+  background: linear-gradient(
+    180deg,
+    rgba(20, 241, 149, 0.55) 0%,
+    rgba(20, 241, 149, 0.25) 100%
+  ) !important;
+  color: #fff !important;
+  border-color: rgba(20, 241, 149, 0.55) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(20, 241, 149, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 8px 22px -10px rgba(20, 241, 149, 0.45) !important;
+}
+
+/* Decorative divs/spans keep a subtle brand tint so icon containers, avatar
+   rings and status chips stay readable without overwhelming the neutral
+   dashboard palette. */
+.mk-scope div[style*='rgba(16, 185, 129'],
+.mk-scope div[style*='rgba(16,185,129'],
+.mk-scope span[style*='rgba(16, 185, 129'],
+.mk-scope span[style*='rgba(16,185,129'] {
+  background: linear-gradient(
+    135deg,
+    rgba(20, 241, 149, 0.14) 0%,
+    rgba(20, 241, 149, 0.04) 100%
+  ) !important;
+  border-color: rgba(20, 241, 149, 0.22) !important;
+  box-shadow: inset 0 0 0 1px rgba(20, 241, 149, 0.18) !important;
+  color: inherit !important;
+}
+/* Decorative aria-hidden overlays (top-of-card gradient strokes) remain
+   collapsed — see rule further below. */
+
+/* ── mk primitives ───────────────────────────────────────────────── */
+
+.mk-scope .mk-page {
+  background: var(--mk-bg);
+  min-height: 100vh;
+  color: var(--mk-text);
+}
+
+.mk-scope .mk-topbar {
+  height: 56px;
+  background: var(--mk-bg);
+  border-bottom: 1px solid var(--mk-surface-3);
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  gap: 16px;
+}
+
+.mk-scope .mk-card {
+  background: var(--mk-surface-1);
+  border-radius: var(--mk-radius);
+  padding: 16px;
+  box-shadow: var(--mk-shadow-card);
+  color: var(--mk-text);
+  transition: box-shadow 0.15s ease;
+  position: relative;
+}
+.mk-scope .mk-card--hover:hover,
+.mk-scope a.mk-card:hover,
+.mk-scope button.mk-card:hover {
+  box-shadow: var(--mk-shadow-card-hover);
+}
+
+.mk-scope .mk-card-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--mk-text);
+  line-height: 20px;
+}
+.mk-scope .mk-card-sub {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--mk-text-secondary);
+  line-height: 20px;
+}
+.mk-scope .mk-card-meta {
+  font-size: 13px;
+  color: var(--mk-text-secondary);
+}
+
+.mk-scope .mk-btn-primary {
+  background: #ededed;
+  color: #0a0a0a;
+  border: none;
+  border-radius: var(--mk-radius);
+  padding: 0 12px;
+  height: 40px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    transform 0.15s,
+    box-shadow 0.15s;
+}
+.mk-scope .mk-btn-primary:hover {
+  background: #d4d4d4;
+}
+.mk-scope .mk-btn-primary:focus-visible {
+  outline: none;
+  box-shadow: var(--mk-shadow-focus);
+}
+.mk-scope .mk-btn-primary:active {
+  transform: scale(0.98);
+}
+.mk-scope .mk-btn-primary--sm,
+.mk-scope .mk-btn-secondary,
+.mk-scope .mk-btn-ghost {
+  height: 32px;
+  padding: 0 12px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
+  border-radius: var(--mk-radius);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.mk-scope .mk-btn-primary--sm {
+  background: #ededed;
+  color: #0a0a0a;
+  border: none;
+}
+.mk-scope .mk-btn-primary--sm:hover {
+  background: #d4d4d4;
+}
+
+.mk-scope .mk-btn-secondary {
+  background: var(--mk-surface-1);
+  color: var(--mk-text);
+  border: 1px solid var(--mk-surface-6);
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+.mk-scope .mk-btn-secondary:hover {
+  background: var(--mk-surface-3);
+  border-color: var(--mk-surface-7);
+}
+.mk-scope .mk-btn-secondary:focus-visible {
+  outline: none;
+  box-shadow: var(--mk-shadow-focus);
+}
+
+.mk-scope .mk-btn-ghost {
+  background: transparent;
+  color: var(--mk-text);
+  border: none;
+  padding: 0 8px;
+  transition: background 0.15s;
+}
+.mk-scope .mk-btn-ghost:hover {
+  background: var(--mk-surface-4);
+}
+.mk-scope .mk-btn-ghost--danger {
+  color: var(--mk-error);
+}
+.mk-scope .mk-btn-ghost--danger:hover {
+  background: var(--mk-error-bg);
+}
+
+.mk-scope .mk-input,
+.mk-scope .mk-search {
+  background: var(--mk-surface-1);
+  color: #fff;
+  border: none;
+  outline: none;
+  border-radius: var(--mk-radius);
+  padding: 0 12px;
+  height: 40px;
+  font-family: 'Geist', Arial, sans-serif;
+  font-size: 14px;
+  box-shadow: var(--mk-shadow-input);
+  transition: box-shadow 0.15s;
+  width: 100%;
+}
+.mk-scope .mk-input::placeholder,
+.mk-scope .mk-search::placeholder {
+  color: var(--mk-text-placeholder);
+}
+.mk-scope .mk-input:focus,
+.mk-scope .mk-search:focus {
+  box-shadow: var(--mk-shadow-input-focus);
+}
+
+.mk-scope .mk-input--sm {
+  height: 32px;
+  font-size: 13px;
+}
+
+.mk-scope .mk-select {
+  background: var(--mk-surface-1);
+  color: var(--mk-text);
+  border: none;
+  outline: none;
+  border-radius: var(--mk-radius);
+  padding: 0 32px 0 12px;
+  height: 40px;
+  font-size: 14px;
+  box-shadow: var(--mk-shadow-input);
+  appearance: none;
+  cursor: pointer;
+  transition: box-shadow 0.15s;
+}
+.mk-scope .mk-select:focus {
+  box-shadow: var(--mk-shadow-input-focus);
+}
+
+.mk-scope .mk-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 20px;
+  border-radius: var(--mk-radius-full);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  padding: 0 6px 0 4px;
+  white-space: nowrap;
+  color: var(--mk-text);
+  background: var(--mk-surface-4);
+}
+.mk-scope .mk-badge--neutral {
+  background: #000;
+  color: var(--mk-text-secondary);
+  box-shadow: var(--mk-shadow-badge-inset);
+}
+.mk-scope .mk-badge--amber {
+  background: var(--mk-amber-bg);
+  color: var(--mk-amber);
+}
+.mk-scope .mk-badge--error {
+  background: var(--mk-error-bg);
+  color: var(--mk-error);
+}
+.mk-scope .mk-badge--success {
+  background: transparent;
+  color: var(--mk-text);
+  padding-left: 0;
+}
+.mk-scope .mk-badge--success::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--mk-success);
+  margin-right: 6px;
+}
+.mk-scope .mk-badge--plan {
+  background: var(--mk-surface-4);
+  color: var(--mk-text);
+  padding: 0 8px;
+}
+
+.mk-scope .mk-link {
+  color: var(--mk-link);
+  text-decoration: none;
+  transition: color 0.125s ease-out;
+}
+.mk-scope .mk-link:hover {
+  text-decoration: underline;
+}
+
+.mk-scope .mk-kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 20px;
+  min-width: 20px;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: var(--mk-surface-5);
+  color: var(--mk-text-secondary);
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.mk-scope .mk-divider {
+  height: 1px;
+  background: var(--mk-surface-3);
+  border: 0;
+}
+
+.mk-scope .mk-tabs {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--mk-radius);
+  background: var(--mk-surface-1);
+  box-shadow: var(--mk-shadow-card);
+}
+.mk-scope .mk-tab {
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--mk-text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+.mk-scope .mk-tab:hover {
+  color: var(--mk-text);
+  background: var(--mk-surface-3);
+}
+.mk-scope .mk-tab--active {
+  background: var(--mk-surface-4);
+  color: var(--mk-text);
+}
+
+/* Legacy `.mk-scope .mk-stat` rules removed — every consumer is now
+ * inside the `.mk-app` shell and uses the cleaner inline-strip design
+ * defined further down. The old card-style background + box-shadow
+ * was leaking through into the new design and reading as "bordered
+ * pills", which the founder explicitly rejected. */
+
+.mk-scope .mk-empty {
+  border-radius: var(--mk-radius);
+  background: var(--mk-surface-1);
+  box-shadow: var(--mk-shadow-card);
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--mk-text-secondary);
+}
+.mk-scope .mk-empty__title {
+  color: var(--mk-text);
+  font-size: 14px;
+  font-weight: 500;
+  margin-top: 12px;
+  margin-bottom: 4px;
+}
+.mk-scope .mk-empty__desc {
+  color: var(--mk-text-secondary);
+  font-size: 13px;
+  max-width: 360px;
+  margin: 0 auto;
+}
+
+.mk-scope .mk-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--mk-surface-1);
+  border-radius: var(--mk-radius);
+  box-shadow: var(--mk-shadow-card);
+  overflow: hidden;
+}
+.mk-scope .mk-table th {
+  text-align: left;
+  padding: 10px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--mk-text-muted);
+  background: var(--mk-surface-2);
+  border-bottom: 1px solid var(--mk-surface-3);
+}
+.mk-scope .mk-table td {
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--mk-text);
+  border-bottom: 1px solid var(--mk-surface-3);
+  vertical-align: middle;
+}
+.mk-scope .mk-table tbody tr:last-child td {
+  border-bottom: none;
+}
+.mk-scope .mk-table tbody tr:hover {
+  background: var(--mk-surface-2) !important;
+}
+
+.mk-scope .mk-nav-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: var(--mk-radius);
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--mk-text);
+  background: transparent;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.mk-scope .mk-nav-item:hover {
+  background: var(--mk-surface-2);
+}
+.mk-scope .mk-nav-item--active {
+  background: var(--mk-surface-4);
+}
+
+.mk-scope .mk-type-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: #000;
+  color: var(--mk-text-secondary);
+  box-shadow: var(--mk-shadow-badge-inset);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  text-transform: uppercase;
+}
+
+.mk-scope .mk-type-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--mk-radius);
+  background: var(--mk-surface-4);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--mk-text);
+  flex-shrink: 0;
+}
+
+.mk-scope .mk-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--mk-surface-4);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--mk-text);
+  font-size: 11px;
+  font-weight: 500;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.mk-scope .mk-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.mk-scope .mk-avatar--lg {
+  width: 40px;
+  height: 40px;
+  font-size: 14px;
+}
+.mk-scope .mk-avatar--xl {
+  width: 64px;
+  height: 64px;
+  font-size: 20px;
+}
+
+/* Loading spinner */
+.mk-scope .mk-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--mk-surface-4);
+  border-top-color: var(--mk-text);
+  border-radius: 50%;
+  animation: mk-spin 0.8s linear infinite;
+}
+@keyframes mk-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Override GradientText inside scope: flatten to white by default */
+.mk-scope .gradient-text,
+.mk-scope .hero-gradient {
+  background: none !important;
+  -webkit-text-fill-color: var(--mk-text) !important;
+  color: var(--mk-text) !important;
+  animation: none !important;
+}
+
+/* Allow purple GradientText to keep a soft brand tint — the user explicitly
+   asked for a subtle diffuse purple on some headings. */
+.mk-scope .gradient-text.gradient-text-purple {
+  background: none !important;
+  -webkit-text-fill-color: #b4a7ff !important;
+  color: #b4a7ff !important;
+  text-shadow: 0 0 18px rgba(20, 241, 149, 0.28);
+  animation: none !important;
+}
+
+/* ── Aggressive override of purple/tailwind styles within scope ───── */
+
+/* Purple-ish tailwind utility classes → neutral accents */
+.mk-scope .text-atlas-200,
+.mk-scope .text-atlas-300,
+.mk-scope .text-atlas-400,
+.mk-scope .text-atlas-500,
+.mk-scope .text-atlas-500,
+.mk-scope .text-violet-300,
+.mk-scope .text-violet-400,
+.mk-scope .text-fuchsia-400,
+.mk-scope .text-\[\#b4a7ff\],
+.mk-scope .text-\[\#9b88ff\],
+.mk-scope .text-\[\#14F195\] {
+  color: var(--mk-text-secondary) !important;
+}
+
+.mk-scope .text-pink-200,
+.mk-scope .text-pink-300,
+.mk-scope .text-pink-400 {
+  color: var(--mk-text-secondary) !important;
+}
+
+/* Solid purple/pink backgrounds & borders → neutral surfaces */
+.mk-scope .bg-atlas-500,
+.mk-scope .bg-atlas-500,
+.mk-scope .bg-atlas-600,
+.mk-scope .bg-violet-600,
+.mk-scope .bg-fuchsia-500,
+.mk-scope .bg-fuchsia-600 {
+  background-color: var(--mk-surface-4) !important;
+  color: var(--mk-text) !important;
+}
+
+.mk-scope .border-atlas-500\/50,
+.mk-scope .border-atlas-500\/50,
+.mk-scope .border-atlas-500\/30,
+.mk-scope .border-atlas-500\/30,
+.mk-scope .border-atlas-400\/50,
+.mk-scope .border-atlas-400\/30,
+.mk-scope [class*='border-purple'],
+.mk-scope [class*='border-violet'],
+.mk-scope [class*='border-fuchsia'],
+.mk-scope [class*='border-pink'] {
+  border-color: var(--mk-surface-3) !important;
+}
+
+/* Tailwind purple/pink gradient utilities */
+.mk-scope [class*='from-purple'],
+.mk-scope [class*='to-purple'],
+.mk-scope [class*='via-purple'],
+.mk-scope [class*='from-violet'],
+.mk-scope [class*='to-violet'],
+.mk-scope [class*='via-violet'],
+.mk-scope [class*='from-fuchsia'],
+.mk-scope [class*='to-fuchsia'],
+.mk-scope [class*='from-pink'],
+.mk-scope [class*='to-pink'],
+.mk-scope [class*='bg-gradient-to'] {
+  background-image: none !important;
+  background-color: transparent !important;
+}
+
+/* Sticky backdrop fake-glass bars used by market pages → solid black */
+.mk-scope .bg-zinc-950\/90,
+.mk-scope .bg-zinc-950\/80,
+.mk-scope .bg-zinc-900\/90,
+.mk-scope .bg-zinc-900\/80,
+.mk-scope .bg-zinc-900\/70,
+.mk-scope .bg-zinc-900\/60,
+.mk-scope .bg-zinc-900\/50,
+.mk-scope .bg-zinc-900\/40,
+.mk-scope .bg-zinc-900 {
+  background-color: #000 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.mk-scope .bg-zinc-800,
+.mk-scope .bg-zinc-800\/30,
+.mk-scope .bg-zinc-800\/50,
+.mk-scope .bg-zinc-800\/80,
+.mk-scope .bg-black\/40,
+.mk-scope .bg-black\/50,
+.mk-scope .bg-black\/60,
+.mk-scope .bg-black\/30 {
+  background-color: var(--mk-surface-1) !important;
+}
+
+.mk-scope .bg-white\/\[0\.02\],
+.mk-scope .bg-white\/\[0\.04\],
+.mk-scope .bg-white\/5,
+.mk-scope .bg-white\/10 {
+  background-color: var(--mk-surface-2) !important;
+}
+
+.mk-scope .border-white\/\[0\.05\],
+.mk-scope .border-white\/\[0\.06\],
+.mk-scope .border-white\/\[0\.08\],
+.mk-scope .border-white\/\[0\.1\],
+.mk-scope .border-white\/5,
+.mk-scope .border-white\/10,
+.mk-scope .border-white\/20 {
+  border-color: var(--mk-surface-3) !important;
+}
+
+.mk-scope .border-zinc-800,
+.mk-scope .border-zinc-800\/80,
+.mk-scope .border-zinc-700,
+.mk-scope .border-zinc-700\/50,
+.mk-scope .border-zinc-700\/30,
+.mk-scope .border-zinc-600,
+.mk-scope .border-zinc-600\/30 {
+  border-color: var(--mk-surface-3) !important;
+}
+
+/* Atlas accents used in the app (purple-ish too) */
+.mk-scope .text-atlas-400,
+.mk-scope .text-atlas-500,
+.mk-scope .text-atlas-600,
+.mk-scope .bg-atlas-400\/10,
+.mk-scope .bg-atlas-500\/5,
+.mk-scope .border-atlas-400\/20,
+.mk-scope .border-atlas-400\/30,
+.mk-scope .border-atlas-400\/60 {
+  color: var(--mk-text-secondary) !important;
+  background-color: transparent !important;
+  border-color: var(--mk-surface-3) !important;
+}
+
+/* Force links to blue accent */
+.mk-scope a,
+.mk-scope .link {
+  color: inherit;
+}
+.mk-scope a.mk-link,
+.mk-scope .mk-text-link {
+  color: var(--mk-link) !important;
+}
+
+/* Rounded pill → flat radius */
+.mk-scope .rounded-full.mk-flat,
+.mk-scope .rounded-2xl.mk-flat,
+.mk-scope .rounded-xl.mk-flat {
+  border-radius: var(--mk-radius) !important;
+}
+
+/* Backdrop blur within scope: off (we use solid blacks) */
+.mk-scope .backdrop-blur-sm,
+.mk-scope .backdrop-blur-md,
+.mk-scope .backdrop-blur-lg,
+.mk-scope .backdrop-blur-xl {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Fill amber stars → keep amber but softer */
+.mk-scope .text-amber-400,
+.mk-scope .fill-amber-400 {
+  color: var(--mk-amber) !important;
+  fill: var(--mk-amber) !important;
+}
+
+/* Heart saved accent → blue link instead of pink */
+.mk-scope .text-pink-400,
+.mk-scope .fill-pink-400,
+.mk-scope .text-pink-300,
+.mk-scope .fill-pink-300 {
+  color: var(--mk-link) !important;
+  fill: var(--mk-link) !important;
+}
+
+/* Bigger rounded (rounded-xl) cards used in market keep radius but use flat bg */
+.mk-scope .rounded-xl,
+.mk-scope .rounded-2xl {
+  border-radius: var(--mk-radius);
+}
+
+/* Ensure sticky headers inside scope use the page bg so content scrolling
+   under them is masked. Token-driven so it tracks light/dark. */
+.mk-scope .sticky {
+  background-color: var(--bg);
+}
+
+/* Text "gradient" strokes overlaying top of cards (inline styled purple line) */
+.mk-scope span[aria-hidden='true'][style*='linear-gradient'] {
+  display: none !important;
+}
+
+/* Keep the scrollbars thin and gray */
+.mk-scope * {
+  scrollbar-color: var(--mk-surface-6) transparent;
+}
+
+/* ============================================================
+   Market Dashboard Shell: sidebar + topbar + main split
+   ============================================================ */
+
+.mk-shell {
+  display: flex;
+  min-height: 100vh;
+  background: #000;
+  color: var(--mk-text);
+}
+
+/* -- Sidebar ------------------------------------------------ */
+
+/* -- Sidebar more/settings popover ------------------------- */
+
+.mk-more {
+  position: relative;
+  display: inline-flex;
+}
+
+.mk-icon-btn--active {
+  background: rgba(20, 241, 149, 0.14);
+  color: #a7f3d0;
+  box-shadow: inset 0 0 0 1px rgba(20, 241, 149, 0.35);
+}
+
+.mk-more__pop {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  right: -4px;
+  z-index: 30;
+  min-width: 220px;
+  padding: 6px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #141419 0%, #0c0c10 100%);
+  border: 1px solid rgba(20, 241, 149, 0.22);
+  box-shadow:
+    0 18px 44px -10px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(255, 255, 255, 0.03),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  animation: mkMoreIn 160ms ease-out;
+}
+
+@keyframes mkMoreIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.mk-more__header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px 4px;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(196, 181, 253, 0.75);
+}
+
+.mk-more__header > svg {
+  opacity: 0.9;
+}
+
+.mk-more__item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 7px;
+  background: transparent;
+  border: 0;
+  color: #d4d4d8;
+  font-size: 12.5px;
+  font-weight: 300;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 140ms ease,
+    color 140ms ease;
+}
+
+.mk-more__item:hover {
+  background: rgba(20, 241, 149, 0.1);
+  color: #fff;
+}
+
+.mk-more__item > svg {
+  color: #a1a1aa;
+  flex-shrink: 0;
+}
+
+.mk-more__item:hover > svg {
+  color: #a7f3d0;
+}
+
+.mk-more__item--danger {
+  color: #fca5a5;
+}
+
+.mk-more__item--danger > svg {
+  color: #fca5a5;
+}
+
+.mk-more__item--danger:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #fecaca;
+}
+
+.mk-more__item--danger:hover > svg {
+  color: #fecaca;
+}
+
+.mk-more__sep {
+  height: 1px;
+  margin: 4px 2px;
+  background: linear-gradient(
+    90deg,
+    rgba(20, 241, 149, 0.18) 0%,
+    rgba(255, 255, 255, 0.04) 60%,
+    transparent 100%
+  );
+}
+
+/* -- Topbar back-to-landing chip --------------------------- */
+
+.mk-topbar__home {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 300;
+  color: rgba(196, 181, 253, 0.85);
+  background: linear-gradient(180deg, rgba(20, 241, 149, 0.14) 0%, rgba(20, 241, 149, 0.04) 100%);
+  border: 1px solid rgba(20, 241, 149, 0.25);
+  text-decoration: none;
+  transition:
+    color 140ms ease,
+    border-color 140ms ease,
+    background 140ms ease;
+}
+
+.mk-topbar__home:hover {
+  color: #fff;
+  border-color: rgba(20, 241, 149, 0.55);
+  background: linear-gradient(180deg, rgba(20, 241, 149, 0.22) 0%, rgba(20, 241, 149, 0.08) 100%);
+}
+
+.mk-topbar__home > svg {
+  color: currentColor;
+  flex-shrink: 0;
+}
+
+/* -- Main area ---------------------------------------------- */
+
+.mk-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: #000;
+}
+
+.mk-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  height: 44px;
+  padding: 0 16px;
+  background: #000;
+  border-bottom: 1px solid var(--mk-surface-3);
+}
+
+.mk-topbar__left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-self: start;
+}
+
+.mk-topbar__center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mk-topbar__right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-self: end;
+}
+
+.mk-topbar__title {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--mk-text);
+  letter-spacing: 0;
+}
+
+.mk-scope-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 28px;
+  padding: 0 10px;
+  border: 0;
+  background: transparent;
+  color: var(--mk-text);
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.mk-scope-picker:hover {
+  background: var(--mk-surface-2);
+}
+
+.mk-scope-picker__dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #50e3c2, #2e7a6a);
+  flex-shrink: 0;
+}
+
+.mk-scope-picker__label {
+  color: var(--mk-text);
+}
+
+.mk-main__scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 24px;
+  outline: none;
+}
+
+/* Responsive: collapse sidebar on small screens */
+@media (max-width: 900px) {
+  .mk-sidebar {
+    position: static;
+    flex: 0 0 auto;
+    width: 100%;
+    height: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--mk-surface-3);
+  }
+  .mk-shell {
+    flex-direction: column;
+  }
+  .mk-main__scroll {
+    padding: 16px;
+  }
+}
+
+/* ============================================================
+   Market Overview specifics
+   ============================================================ */
+
+.mk-overview-grid {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 1100px) {
+  .mk-overview-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mk-section-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--mk-text);
+  letter-spacing: 0;
+  margin: 0 0 10px 2px;
+}
+
+.mk-usage-row {
+  display: grid;
+  grid-template-columns: 16px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-top: 1px solid var(--mk-surface-3);
+}
+
+.mk-usage-row:first-of-type {
+  border-top: 0;
+}
+
+.mk-usage-row__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  justify-self: center;
+}
+
+.mk-usage-row__label {
+  font-size: 12.5px;
+  color: var(--mk-text);
+  font-weight: 400;
+}
+
+.mk-usage-row__value {
+  font-size: 12px;
+  color: var(--mk-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.mk-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.mk-toolbar__search {
+  flex: 1;
+  position: relative;
+}
+
+.mk-toolbar__search input {
+  width: 100%;
+  height: 36px;
+  padding: 0 12px 0 34px;
+  border-radius: 6px;
+  background: var(--mk-surface-1);
+  border: 1px solid var(--mk-surface-3);
+  color: var(--mk-text);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 120ms ease;
+}
+
+.mk-toolbar__search input:focus {
+  border-color: var(--mk-surface-5);
+}
+
+.mk-toolbar__search-icon {
+  position: absolute;
+  left: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--mk-text-muted);
+  pointer-events: none;
+}
+
+.mk-icon-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  background: var(--mk-surface-1);
+  border: 1px solid var(--mk-surface-3);
+  color: var(--mk-text-secondary);
+  cursor: pointer;
+  transition:
+    color 120ms ease,
+    background 120ms ease;
+}
+
+.mk-icon-box:hover {
+  color: var(--mk-text);
+}
+
+.mk-icon-box--active {
+  color: var(--mk-text);
+  background: var(--mk-surface-2);
+}
+
+.mk-btn-split {
+  display: inline-flex;
+  align-items: stretch;
+  height: 36px;
+  border-radius: 6px;
+  background: var(--mk-text);
+  color: #000;
+  font-size: 13px;
+  font-weight: 500;
+  overflow: hidden;
+}
+
+.mk-btn-split__main {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 14px;
+  background: transparent;
+  color: inherit;
+  border: 0;
+  cursor: pointer;
+}
+
+.mk-btn-split__divider {
+  width: 1px;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.mk-btn-split__chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 10px;
+  background: transparent;
+  color: inherit;
+  border: 0;
+  cursor: pointer;
+}
+
+/* Project-style card (list row) */
+.mk-project-card {
+  display: block;
+  padding: 16px;
+  border-radius: 8px;
+  background: var(--mk-surface-1);
+  border: 1px solid var(--mk-surface-3);
+  color: inherit;
+  text-decoration: none;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease;
+}
+
+.mk-project-card + .mk-project-card {
+  margin-top: 10px;
+}
+
+.mk-project-card:hover {
+  background: var(--mk-surface-2);
+  border-color: var(--mk-surface-4);
+}
+
+.mk-project-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mk-project-card__ident {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.mk-project-card__title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--mk-text);
+  margin: 0;
+  line-height: 18px;
+}
+
+.mk-project-card__domain {
+  font-size: 12.5px;
+  color: var(--mk-text-secondary);
+  margin: 2px 0 0 0;
+  line-height: 16px;
+}
+
+.mk-project-card__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mk-project-card__check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid #1f4a7a;
+  color: var(--mk-link);
+}
+
+.mk-project-card__repo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: var(--mk-surface-2);
+  border: 1px solid var(--mk-surface-3);
+  font-size: 11.5px;
+  color: var(--mk-text-secondary);
+  font-family: 'Geist Mono', monospace;
+}
+
+.mk-project-card__commit {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--mk-text);
+  line-height: 18px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+}
+
+.mk-project-card__meta {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--mk-text-muted);
+}
+
+/* Recent previews list (left column, small rows) */
+.mk-preview-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-top: 1px solid var(--mk-surface-3);
+  font-size: 12.5px;
+  color: var(--mk-text);
+  text-decoration: none;
+}
+
+.mk-preview-row:first-of-type {
+  border-top: 0;
+}
+
+.mk-preview-row__icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--mk-surface-2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid var(--mk-surface-3);
+  color: var(--mk-text-secondary);
+}
+
+.mk-preview-row__title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mk-preview-row__tag {
+  font-size: 11px;
+  color: var(--mk-text-secondary);
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--mk-surface-2);
+  border: 1px solid var(--mk-surface-3);
+  font-family: 'Geist Mono', monospace;
+  flex-shrink: 0;
+}
+
+.mk-preview-row__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--mk-success);
+  flex-shrink: 0;
+}
+
+/* Alerts card body */
+.mk-alerts-card {
+  text-align: center;
+  padding: 20px 16px;
+}
+
+.mk-alerts-card__title {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--mk-text);
+  margin: 0 0 4px 0;
+}
+
+.mk-alerts-card__desc {
+  font-size: 12px;
+  color: var(--mk-text-secondary);
+  margin: 0 0 14px 0;
+  line-height: 16px;
+}
+
+.mk-alerts-card__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  padding: 0 14px;
+  border-radius: 6px;
+  background: var(--mk-text);
+  color: #000;
+  font-size: 12.5px;
+  font-weight: 500;
+  border: 0;
+  cursor: pointer;
+}
+
+/* Small "Upgrade" pill inside Usage card */
+.mk-upgrade-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 8px;
+  font-size: 11px;
+  color: var(--mk-text);
+  background: var(--mk-surface-2);
+  border: 1px solid var(--mk-surface-3);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* ============================================================
+   Subtle Atlas-purple accents
+   Kept soft + diffuse so the dashboard stays calm. Never on
+   large blocks — only on titles, brand marks, and focused text.
+   ============================================================ */
+
+:root {
+  --mk-accent: #b4a7ff;
+  --mk-accent-strong: #14f195;
+  --mk-accent-soft: rgba(180, 167, 255, 0.82);
+}
+
+/* Generic accent helpers */
+.mk-scope .mk-accent {
+  color: var(--mk-accent) !important;
+  text-shadow: 0 0 18px rgba(20, 241, 149, 0.28);
+  letter-spacing: -0.3px !important;
+}
+
+.mk-scope .mk-accent-soft {
+  color: var(--mk-accent-soft) !important;
+  text-shadow: 0 0 14px rgba(20, 241, 149, 0.18);
+}
+
+/* Gradient headline text (white → soft purple) */
+.mk-scope .mk-accent-gradient {
+  background: linear-gradient(92deg, #ffffff 0%, #d6ccff 55%, #b4a7ff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent !important;
+  letter-spacing: -0.3px !important;
+}
+
+/* Topbar title — subtle purple tint with soft halo */
+.mk-scope .mk-topbar__title {
+  color: var(--mk-accent) !important;
+  text-shadow: 0 0 16px rgba(20, 241, 149, 0.22);
+  letter-spacing: -0.2px !important;
+  font-weight: 400;
+}
+
+/* Section headings inside main content get a soft halo */
+.mk-scope .mk-section-title {
+  color: #ededed;
+  letter-spacing: -0.2px !important;
+}
+
+/* Highlight just the listings / overview heading (acts as the
+   page-hero accent without being loud) */
+.mk-scope .mk-section-title--accent {
+  background: linear-gradient(92deg, #ffffff 0%, #d6ccff 60%, #b4a7ff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent !important;
+  font-weight: 400;
+}
+
+/* Scope picker label reads as a soft brand line */
+.mk-scope .mk-scope-picker__label {
+  color: var(--mk-accent) !important;
+  text-shadow: 0 0 14px rgba(20, 241, 149, 0.22);
+  letter-spacing: -0.2px !important;
+}
+.mk-scope .mk-scope-picker__dot {
+  background: radial-gradient(circle at 30% 30%, #a7f3d0, #14f195 70%) !important;
+  box-shadow:
+    0 0 0 1px rgba(20, 241, 149, 0.35),
+    0 0 12px rgba(20, 241, 149, 0.45);
+}
+
+/* Active nav row — soft purple hint on the left edge */
+.mk-scope .mk-nav-row--active {
+  background: linear-gradient(
+    90deg,
+    rgba(20, 241, 149, 0.1) 0%,
+    rgba(20, 241, 149, 0.03) 55%,
+    transparent 100%
+  ) !important;
+  color: var(--mk-text) !important;
+  box-shadow: inset 2px 0 0 rgba(20, 241, 149, 0.55);
+}
+.mk-scope .mk-nav-row--active .mk-nav-row__icon {
+  color: var(--mk-accent);
+  filter: drop-shadow(0 0 6px rgba(20, 241, 149, 0.35));
+}
+
+/* Overview stat dot for brand metric gets a soft purple halo */
+.mk-scope .mk-usage-row__dot {
+  box-shadow: 0 0 8px currentColor;
+}
+
+/* Small "plan" badge beside username — soft purple outline */
+.mk-scope .mk-badge--outline {
+  color: var(--mk-accent) !important;
+  border-color: rgba(20, 241, 149, 0.3) !important;
+  background: rgba(20, 241, 149, 0.06) !important;
+}
+
+/* Alerts card CTA — soft purple with diffuse glow */
+.mk-scope .mk-alerts-card__cta {
+  background: linear-gradient(180deg, #b4a7ff 0%, #14f195 100%) !important;
+  color: #0a0a0a !important;
+  box-shadow: 0 0 24px rgba(20, 241, 149, 0.35);
+}
+
+/* Diffuse ambient glow anchored to the topbar so the whole
+   dashboard has a subtle brand breath */
+.mk-main {
+  position: relative;
+}
+.mk-main::before {
+  content: '';
+  position: absolute;
+  top: -120px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 540px;
+  height: 280px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(20, 241, 149, 0.16) 0%,
+    rgba(20, 241, 149, 0.06) 40%,
+    transparent 70%
+  );
+  filter: blur(40px);
+  pointer-events: none;
+  z-index: 0;
+}
+.mk-topbar,
+.mk-main__scroll {
+  position: relative;
+  z-index: 1;
+}
+
+/* ============================================================
+   Deploy / Publish wizard (.mk-wizard)
+   Unified dashboard-dark look for the agent + repo publish flows.
+   Scoped with .mk-scope for specificity so inline styles are
+   deterministically overridden.
+   ============================================================ */
+
+.mk-scope .mk-wizard {
+  background: var(--mk-surface-1) !important;
+  border: 1px solid var(--mk-surface-4) !important;
+  border-radius: 12px !important;
+  padding: 28px 28px 24px 28px !important;
+  box-shadow:
+    var(--mk-shadow-card),
+    inset 0 1px 0 rgba(255, 255, 255, 0.02) !important;
+  max-width: 720px !important;
+  margin: 24px auto !important;
+  position: relative;
+}
+
+.mk-scope .mk-wizard__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.mk-scope .mk-wizard__title {
+  font-size: 17px !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.3px !important;
+  color: var(--mk-text) !important;
+  line-height: 1.25 !important;
+  margin: 0 0 6px 0 !important;
+}
+
+.mk-scope .mk-wizard__sub {
+  font-size: 12px !important;
+  color: var(--mk-text-muted) !important;
+  letter-spacing: -0.2px;
+}
+
+.mk-scope .mk-wizard__close {
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid var(--mk-surface-4) !important;
+  background: transparent !important;
+  color: var(--mk-text-muted) !important;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+.mk-scope .mk-wizard__close:hover {
+  color: var(--mk-text) !important;
+  border-color: var(--mk-surface-6) !important;
+  background: var(--mk-surface-2) !important;
+}
+
+/* Steps rail (segmented progress) */
+.mk-scope .mk-wizard__steps {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 22px;
+}
+.mk-scope .mk-wizard__step {
+  flex: 1;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--mk-surface-3) !important;
+  transition: background 0.2s ease;
+}
+.mk-scope .mk-wizard__step--done {
+  background: var(--mk-text) !important;
+}
+
+/* Form elements — unified input look */
+.mk-scope .mk-wizard input,
+.mk-scope .mk-wizard select,
+.mk-scope .mk-wizard textarea {
+  width: 100%;
+  background: var(--mk-surface-0) !important;
+  border: 1px solid var(--mk-surface-4) !important;
+  color: var(--mk-text) !important;
+  border-radius: 8px !important;
+  padding: 9px 12px !important;
+  font-size: 13px !important;
+  font-weight: 300 !important;
+  letter-spacing: -0.2px !important;
+  font-family: 'Inter', system-ui, sans-serif !important;
+  outline: none !important;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+  box-shadow: none !important;
+}
+.mk-scope .mk-wizard textarea {
+  resize: vertical;
+  min-height: 96px;
+  line-height: 1.55 !important;
+}
+.mk-scope .mk-wizard input::placeholder,
+.mk-scope .mk-wizard textarea::placeholder {
+  color: var(--mk-text-muted) !important;
+  opacity: 1;
+}
+.mk-scope .mk-wizard input:focus,
+.mk-scope .mk-wizard select:focus,
+.mk-scope .mk-wizard textarea:focus {
+  border-color: rgba(20, 241, 149, 0.45) !important;
+  background: var(--mk-surface-1) !important;
+  box-shadow: 0 0 0 3px rgba(20, 241, 149, 0.08) !important;
+}
+.mk-scope .mk-wizard input:disabled,
+.mk-scope .mk-wizard select:disabled,
+.mk-scope .mk-wizard textarea:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.mk-scope .mk-wizard label {
+  font-size: 11.5px !important;
+  color: var(--mk-text-muted) !important;
+  letter-spacing: 0.02em !important;
+  font-weight: 400 !important;
+  display: block;
+  margin-bottom: 6px;
+}
+
+/* Chip / segmented choice buttons */
+.mk-scope .mk-wizard__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.2px !important;
+  padding: 7px 12px !important;
+  border-radius: 8px !important;
+  background: var(--mk-surface-0) !important;
+  border: 1px solid var(--mk-surface-4) !important;
+  color: var(--mk-text-secondary) !important;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+.mk-scope .mk-wizard__chip:hover {
+  border-color: var(--mk-surface-6) !important;
+  background: var(--mk-surface-2) !important;
+  color: var(--mk-text) !important;
+}
+.mk-scope .mk-wizard__chip--active {
+  background: var(--mk-surface-3) !important;
+  border-color: var(--mk-surface-7) !important;
+  color: var(--mk-text) !important;
+  box-shadow: inset 0 0 0 1px rgba(20, 241, 149, 0.22) !important;
+}
+
+/* Large tile-style choice (pricing model / type card) */
+.mk-scope .mk-wizard__tile {
+  text-align: left;
+  background: var(--mk-surface-0) !important;
+  border: 1px solid var(--mk-surface-4) !important;
+  border-radius: 10px !important;
+  padding: 12px 14px !important;
+  color: var(--mk-text-secondary) !important;
+  transition: all 0.15s ease;
+}
+.mk-scope .mk-wizard__tile:hover {
+  border-color: var(--mk-surface-6) !important;
+  background: var(--mk-surface-2) !important;
+}
+.mk-scope .mk-wizard__tile--active {
+  border-color: rgba(20, 241, 149, 0.45) !important;
+  background: var(--mk-surface-2) !important;
+  box-shadow: inset 0 0 0 1px rgba(20, 241, 149, 0.28) !important;
+}
+
+/* Navigation primary / secondary */
+.mk-scope .mk-wizard__primary {
+  flex: 1;
+  height: 40px;
+  border-radius: 8px !important;
+  background: #ededed !important;
+  color: #0a0a0a !important;
+  border: none !important;
+  box-shadow: none !important;
+  font-weight: 400 !important;
+  font-size: 13px !important;
+  letter-spacing: -0.2px !important;
+  transition: background 0.15s ease;
+  cursor: pointer;
+}
+.mk-scope .mk-wizard__primary:hover:not(:disabled) {
+  background: #ffffff !important;
+}
+.mk-scope .mk-wizard__primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.mk-scope .mk-wizard__secondary {
+  flex: 1;
+  height: 40px;
+  border-radius: 8px !important;
+  background: transparent !important;
+  color: var(--mk-text) !important;
+  border: 1px solid var(--mk-surface-5) !important;
+  font-weight: 400 !important;
+  font-size: 13px !important;
+  letter-spacing: -0.2px !important;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+  cursor: pointer;
+}
+.mk-scope .mk-wizard__secondary:hover {
+  border-color: var(--mk-surface-7) !important;
+  background: var(--mk-surface-2) !important;
+}
+
+/* Info / note cards */
+.mk-scope .mk-wizard__note {
+  background: var(--mk-surface-0) !important;
+  border: 1px solid var(--mk-surface-4) !important;
+  border-radius: 10px !important;
+  padding: 12px 14px !important;
+  color: var(--mk-text-secondary) !important;
+  box-shadow: inset 2px 0 0 rgba(20, 241, 149, 0.4) !important;
+}
+.mk-scope .mk-wizard__note p {
+  font-size: 12px !important;
+  line-height: 1.55 !important;
+  color: var(--mk-text-secondary) !important;
+}
+
+/* Drop-zone (file upload) */
+.mk-scope .mk-wizard__dropzone {
+  border: 1.5px dashed var(--mk-surface-5) !important;
+  background: var(--mk-surface-0) !important;
+  border-radius: 10px !important;
+  padding: 28px 16px !important;
+  text-align: center;
+  color: var(--mk-text-muted) !important;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+.mk-scope .mk-wizard__dropzone:hover {
+  border-color: var(--mk-surface-7) !important;
+  background: var(--mk-surface-1) !important;
+}
+.mk-scope .mk-wizard__dropzone--done {
+  border-style: solid !important;
+  border-color: rgba(34, 197, 94, 0.35) !important;
+  background: rgba(34, 197, 94, 0.04) !important;
+}
+
+/* Section heading inside wizard */
+.mk-scope .mk-wizard__section-title {
+  font-size: 12.5px !important;
+  font-weight: 400 !important;
+  color: var(--mk-text) !important;
+  letter-spacing: -0.2px !important;
+  margin-bottom: 10px !important;
+}
+
+/* Field hint / counter text */
+.mk-scope .mk-wizard__hint {
+  font-size: 11px !important;
+  color: var(--mk-text-muted) !important;
+  margin-top: 6px !important;
+}
+
+/* Neutralise aggressive inline gradient backgrounds within the wizard so
+   nothing leaks the old purple slab look. */
+.mk-scope .mk-wizard [style*='rgba(16,185,129'],
+.mk-scope .mk-wizard [style*='rgba(16, 185, 129'] {
+  background: var(--mk-surface-0) !important;
+  border-color: var(--mk-surface-4) !important;
+  box-shadow: none !important;
+  color: var(--mk-text-secondary) !important;
+}
+/* Keep active chips/tiles recognisable */
+.mk-scope .mk-wizard .mk-wizard__chip--active,
+.mk-scope .mk-wizard .mk-wizard__tile--active,
+.mk-scope .mk-wizard .mk-wizard__dropzone--done {
+  background: var(--mk-surface-2) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Agents page (.mk-agents-*)
+   Minimal dashboard layout: breadcrumb + title + right-aligned CTA,
+   plain underlined tabs, and a sticky two-column split (form | listings).
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.mk-scope .mk-agents-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 28px 40px;
+  color: var(--mk-text) !important;
+  background: transparent !important;
+}
+
+.mk-scope .mk-agents-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--mk-surface-4);
+}
+
+.mk-scope .mk-agents-head > div:first-child {
+  min-width: 0;
+}
+
+.mk-scope .mk-agents-head__cta {
+  flex: 0 0 auto;
+  height: 32px !important;
+  padding: 0 14px !important;
+  font-size: 12px !important;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mk-scope .mk-breadcrumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--mk-text-muted);
+  letter-spacing: 0.02em;
+  margin-bottom: 6px;
+}
+
+.mk-scope .mk-breadcrumb__link {
+  color: var(--mk-text-muted) !important;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.mk-scope .mk-breadcrumb__link:hover {
+  color: var(--mk-text) !important;
+}
+
+.mk-scope .mk-breadcrumb__sep {
+  color: var(--mk-surface-6);
+}
+
+.mk-scope .mk-agents-title {
+  font-size: 22px;
+  line-height: 1.2;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: var(--mk-text);
+  margin: 0;
+}
+
+.mk-scope .mk-agents-tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-bottom: 1px solid var(--mk-surface-4);
+  margin-bottom: 20px;
+}
+
+.mk-scope .mk-agents-tab {
+  position: relative;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: var(--mk-text-muted) !important;
+  font-size: 12.5px;
+  font-weight: 400;
+  letter-spacing: 0.005em;
+  height: 34px;
+  padding: 0 12px;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.mk-scope .mk-agents-tab:hover {
+  color: var(--mk-text-secondary) !important;
+}
+
+.mk-scope .mk-agents-tab--active {
+  color: var(--mk-text) !important;
+}
+
+.mk-scope .mk-agents-tab--active::after {
+  content: '';
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: -1px;
+  height: 1.5px;
+  background: var(--mk-text);
+  border-radius: 1px;
+}
+
+.mk-scope .mk-agents-split {
+  display: grid;
+  grid-template-columns: minmax(340px, 420px) 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .mk-scope .mk-agents-split {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mk-scope .mk-agents-split__form {
+  position: sticky;
+  top: 16px;
+  min-width: 0;
+}
+
+.mk-scope .mk-agents-split__form .mk-wizard {
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 20px 20px 18px 20px !important;
+}
+
+.mk-scope .mk-agents-split__list {
+  min-width: 0;
+}
+
+.mk-scope .mk-empty {
+  border: 1px solid var(--mk-surface-4);
+  background: var(--mk-surface-1);
+  border-radius: 10px;
+  padding: 28px 20px;
+  text-align: center;
+}
+
+.mk-scope .mk-empty__text {
+  color: var(--mk-text-muted) !important;
+  font-size: 12.5px;
+  margin: 0;
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   App-style redesign (Option B) — flat surfaces, product-grade density.
+   Scoped under .mk-app so we can test on one page without touching
+   anything else on the site. Uses solid #0F0F15 cards with 1px borders,
+   font-weight 400 for readability, small radii (10px), tabular numbers
+   for data, and purple only on primary CTAs + active states.
+   ─────────────────────────────────────────────────────────────────── */
+
+/* `.mk-app` is applied at the ClientShell root so its tokens are
+   available across the dashboard. It only sets CSS variables +
+   typography enforcement — no padding/max-width here so it won't
+   break layouts with their own container rules. Page containers that
+   want the default product-shell padding opt in via `.mk-app-page`. */
+.mk-app {
+  --app-bg: var(--bg);
+  --app-surface: var(--bg-card);
+  --app-surface-hover: var(--bg-elevated);
+  --app-border: var(--border);
+  --app-border-strong: var(--border-hover);
+  --app-text: var(--text);
+  --app-text-dim: var(--text-secondary);
+  --app-text-mute: var(--text-muted);
+  --app-accent: var(--brand);
+  --app-accent-dim: var(--brand-dim);
+  --app-ok: var(--brand);
+  --app-warn: #f59e0b;
+  --app-err: #ef4444;
+  --app-radius: 10px;
+  --app-radius-sm: 6px;
+}
+.mk-app-page {
+  padding: 24px 28px 40px;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+/* Mobile polish — apply narrower padding + stack rules + smaller
+   typography on sub-640px screens so the new app-style pages don't
+   overflow a 375px viewport. v2 */
+@media (max-width: 640px) {
+  .mk-app-page {
+    padding: 16px 14px 32px;
+  }
+  .mk-app .mk-hero__title {
+    font-size: 22px;
+  }
+  .mk-app .mk-hero__sub {
+    font-size: 12.5px;
+  }
+  /* Mobile: keep the inline strip but allow horizontal scroll instead
+   * of stacking into a 2x2 grid. Each stat shrinks; the strip scrolls
+   * if it overflows. Same divider treatment as desktop, just tighter. */
+  .mk-app .mk-stats {
+    display: flex !important;
+    grid-template-columns: none;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+    margin-top: 12px;
+  }
+  .mk-app .mk-stats::-webkit-scrollbar {
+    display: none;
+  }
+  .mk-app .mk-stat {
+    min-width: 0 !important;
+    flex-shrink: 0;
+    padding: 2px 16px;
+  }
+  .mk-app .mk-stat + .mk-stat {
+    border-left: 1px solid rgba(255, 255, 255, 0.07) !important;
+  }
+  .mk-app .mk-stat:first-child {
+    padding-left: 0;
+  }
+  .mk-app .mk-stat__label {
+    font-size: 9.5px;
+    margin-bottom: 6px;
+  }
+  .mk-app .mk-stat__value {
+    font-size: 15px;
+  }
+  .mk-app .mk-toolbar {
+    gap: 8px;
+  }
+  .mk-app .mk-toolbar > .mk-search {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+  .mk-app .mk-toolbar > .mk-select {
+    flex: 1 1 0;
+  }
+  .mk-app .mk-select select {
+    width: 100%;
+  }
+  .mk-app .mk-tab {
+    padding: 0 12px;
+    font-size: 12.5px;
+  }
+  .mk-app .mk-card {
+    padding: 14px;
+  }
+  .mk-app .mk-card__title {
+    font-size: 13.5px;
+  }
+  .mk-app .mk-card__actions {
+    flex: 1 1 100%;
+    justify-content: flex-end;
+  }
+  .mk-app .mk-btn {
+    padding: 0 12px;
+  }
+}
+.mk-app,
+.mk-app * {
+  font-family:
+    'Inter',
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif !important;
+}
+/* Override the project's global `* { font-weight: 300 }` only within
+   elements that opt in via .mk-app-page (and all mk-* components). This
+   keeps legacy pages untouched until each one is explicitly migrated. */
+.mk-app-page,
+.mk-app-page p,
+.mk-app-page span,
+.mk-app-page div,
+.mk-app-page button,
+.mk-app-page select,
+.mk-app-page input,
+.mk-app-page textarea,
+.mk-app-page a,
+.mk-app-page h1,
+.mk-app-page h2,
+.mk-app-page h3,
+.mk-app-page h4 {
+  font-weight: 500;
+}
+
+/* Compat layer — tame the ugliest Tailwind utility usages inside
+   pages that opt into .mk-app-page WITHOUT having to rewrite their
+   markup. Anything outside .mk-app-page keeps its current styling. */
+.mk-app-page .font-light {
+  font-weight: 500 !important;
+}
+.mk-app-page .font-normal {
+  font-weight: 500 !important;
+}
+.mk-app-page .font-medium {
+  font-weight: 600 !important;
+}
+.mk-app-page .font-semibold {
+  font-weight: 600 !important;
+}
+.mk-app-page .font-bold {
+  font-weight: 700 !important;
+}
+.mk-app-page .rounded-2xl {
+  border-radius: var(--app-radius) !important;
+}
+.mk-app-page .rounded-xl {
+  border-radius: var(--app-radius) !important;
+}
+/* Reduced-motion users get no entry animations at all. Plus we cap
+   any decorative `whileHover` lift on lists — they read as landing
+   page polish, not product UX. */
+@media (prefers-reduced-motion: reduce) {
+  .mk-app-page * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+/* Title styles across pages — catch the big headings most apps use
+   so migrated pages get the hero typography without rewriting JSX. */
+.mk-app-page h1,
+.mk-app-page .text-4xl,
+.mk-app-page .text-3xl {
+  letter-spacing: -0.015em;
+}
+
+/* Sidebar typography — raise nav items, section headers and chips to
+   the new product weight. No !important so inline styles with their
+   own fontWeight (the Atlas logo is 700 inline) still win.
+   NOTE: className is .mk-app-sidebar, NOT .mk-sidebar, because the
+   legacy .mk-sidebar in this file forces display:flex + 232px width
+   and would break mobile hiding. */
+.mk-app-sidebar,
+.mk-app-sidebar * {
+  font-weight: 500;
+}
+.mk-app-sidebar .font-light,
+.mk-app-sidebar .font-normal {
+  font-weight: 500;
+}
+.mk-app-sidebar .font-medium,
+.mk-app-sidebar .font-semibold {
+  font-weight: 600;
+}
+.mk-app-sidebar .font-bold {
+  font-weight: 700;
+}
+.mk-app .mk-num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+/* Hero */
+.mk-app .mk-hero {
+  margin-bottom: 20px;
+}
+.mk-app .mk-hero__crumbs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--app-text-mute);
+  margin-bottom: 8px;
+}
+.mk-app .mk-hero__crumb-link {
+  color: var(--app-text-dim);
+  text-decoration: none;
+}
+.mk-app .mk-hero__crumb-link:hover {
+  color: var(--app-text);
+}
+.mk-app .mk-hero__crumb-sep {
+  color: var(--app-text-mute);
+}
+.mk-app .mk-hero__row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.mk-app .mk-hero__title {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--app-text);
+  margin: 0 0 4px;
+  line-height: 1.1;
+}
+.mk-app .mk-hero__sub {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--app-text-dim);
+  margin: 0;
+  max-width: 560px;
+  line-height: 1.5;
+}
+/* App-style stat strip — dashboard typography, no boxes.
+ *   • Header reads as a dense data row (Stripe / Linear vibe), not
+ *     a row of bordered pills.
+ *   • Each stat = small uppercase label stacked over a tabular-num
+ *     value. Hairline 1px divider between stats; everything else is
+ *     pure typography.
+ *   • Defensive resets on background / border-radius / box-shadow so
+ *     no legacy `.mk-scope` rule can re-introduce the card look.
+ */
+.mk-app .mk-stats {
+  margin-top: 16px;
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  width: fit-content;
+  max-width: 100%;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+.mk-app .mk-stat {
+  position: relative;
+  padding: 4px 28px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+.mk-app .mk-stat + .mk-stat {
+  border-left: 1px solid rgba(255, 255, 255, 0.07) !important;
+}
+.mk-app .mk-stat:first-child {
+  padding-left: 0;
+}
+.mk-app .mk-stat:last-child {
+  padding-right: 0;
+}
+.mk-app .mk-stat__label {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.42);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-weight: 500;
+  margin-bottom: 8px;
+  line-height: 1;
+}
+.mk-app .mk-stat__value {
+  font-size: 17px;
+  font-weight: 400;
+  color: #fafafa;
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  line-height: 1;
+  letter-spacing: -0.005em;
+}
+/* Inline unit suffix (e.g. "ETH" after a number) — render light + muted
+ * so the value reads as the number, with the unit as quiet metadata. */
+.mk-app .mk-stat__value > span:not(.mk-stat__dot) {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.42);
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.mk-app .mk-stat__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  display: inline-block;
+}
+.mk-app .mk-stat__dot--live {
+  background: var(--app-ok);
+  box-shadow: 0 0 6px rgba(20, 241, 149, 0.55);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Tabs */
+.mk-app .mk-tabs {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  border-bottom: 1px solid var(--app-border);
+  margin-bottom: 20px;
+  padding: 0;
+}
+.mk-app .mk-tab {
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--app-text-mute);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  transition: color 120ms ease;
+  line-height: 1;
+}
+.mk-app .mk-tab:hover {
+  color: var(--app-text-dim);
+}
+.mk-app .mk-tab--active {
+  color: var(--app-text);
+}
+.mk-app .mk-tab--active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--app-accent);
+  border-radius: 2px 2px 0 0;
+}
+
+/* Toolbar */
+.mk-app .mk-toolbar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  align-items: stretch;
+}
+.mk-app .mk-toolbar > * {
+  height: 34px;
+}
+.mk-app .mk-search {
+  position: relative;
+  flex: 1 1 260px;
+  min-width: 0;
+}
+.mk-app .mk-search__icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  color: var(--app-text-mute);
+  pointer-events: none;
+}
+.mk-app .mk-search__input {
+  width: 100%;
+  height: 34px;
+  padding: 0 30px 0 32px;
+  font-size: 13px;
+  color: var(--app-text);
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius);
+  outline: none;
+  transition: border-color 120ms ease;
+}
+.mk-app .mk-search__input::placeholder {
+  color: var(--app-text-mute);
+}
+.mk-app .mk-search__input:focus {
+  border-color: var(--app-accent);
+}
+.mk-app .mk-search__clear {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 4px;
+  color: var(--app-text-mute);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+.mk-app .mk-search__clear:hover {
+  color: var(--app-text);
+}
+.mk-app .mk-search__kbd {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  color: var(--app-text-mute);
+  background: var(--app-surface-hover);
+  border: 1px solid var(--app-border);
+  border-radius: 4px;
+  padding: 1px 6px;
+  pointer-events: none;
+}
+
+/* Segmented control */
+.mk-app .mk-seg {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius);
+  gap: 2px;
+}
+.mk-app .mk-seg__item {
+  padding: 6px 14px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--app-text-mute);
+  background: transparent;
+  border: none;
+  border-radius: var(--app-radius-sm);
+  cursor: pointer;
+  transition:
+    color 120ms ease,
+    background 120ms ease;
+  white-space: nowrap;
+}
+.mk-app .mk-seg__item:hover {
+  color: var(--app-text-dim);
+}
+.mk-app .mk-seg__item--active {
+  background: var(--app-surface-hover);
+  color: var(--app-text);
+}
+
+/* Select */
+.mk-app .mk-select {
+  position: relative;
+  display: inline-flex;
+  align-items: stretch;
+}
+.mk-app .mk-select select {
+  height: 34px;
+  padding: 0 30px 0 14px;
+  font-size: 12.5px;
+  color: var(--app-text);
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius);
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  cursor: pointer;
+  font-weight: 600;
+  line-height: 32px;
+  transition: border-color 120ms ease;
+}
+.mk-app .mk-select select:hover {
+  border-color: var(--app-border-strong);
+}
+.mk-app .mk-select__caret {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 12px;
+  color: var(--app-text-mute);
+  pointer-events: none;
+}
+
+/* Buttons */
+.mk-app .mk-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 14px;
+  font-size: 12.5px;
+  font-weight: 500;
+  border-radius: var(--app-radius);
+  cursor: pointer;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease;
+  border: 1px solid transparent;
+  line-height: 1;
+  white-space: nowrap;
+}
+.mk-app .mk-btn--sm {
+  height: 28px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+/* Primary action — black/white pill, same as .atlas-cta. The old
+   green-fluo / lavender hover was a holdover from the Bolty era. */
+.mk-app .mk-btn--primary {
+  background: #ffffff;
+  color: #000000;
+  border-color: rgba(0, 0, 0, 0.08);
+  font-weight: 500;
+}
+.mk-app .mk-btn--primary:hover {
+  background: #f4f4f5;
+  border-color: rgba(0, 0, 0, 0.12);
+}
+:root[data-theme='light'] .mk-app .mk-btn--primary {
+  background: #000000;
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+:root[data-theme='light'] .mk-app .mk-btn--primary:hover {
+  background: #18181b;
+}
+.mk-app .mk-btn--ghost {
+  background: var(--app-surface);
+  color: var(--app-text-dim);
+  border-color: var(--app-border);
+}
+.mk-app .mk-btn--ghost:hover {
+  color: var(--app-text);
+  border-color: var(--app-border-strong);
+  background: var(--app-surface-hover);
+}
+.mk-app .mk-btn--secondary {
+  background: rgba(20, 241, 149, 0.1);
+  color: #c9beff;
+  border-color: rgba(20, 241, 149, 0.3);
+}
+.mk-app .mk-btn--secondary:hover {
+  background: rgba(20, 241, 149, 0.18);
+  border-color: rgba(20, 241, 149, 0.5);
+  color: #fff;
+}
+.mk-app .mk-btn--danger {
+  background: transparent;
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+.mk-app .mk-btn--danger:hover {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.6);
+  color: #fee2e2;
+}
+.mk-app .mk-btn--loading {
+  pointer-events: none;
+  opacity: 0.7;
+}
+.mk-app .mk-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.mk-app .mk-btn:focus-visible {
+  outline: 2px solid var(--app-accent);
+  outline-offset: 1px;
+}
+
+@keyframes mk-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ─ Card (flat, canonical) ─────────────────────────────────────────── */
+.mk-app .mk-card-flat {
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius);
+  padding: 14px 16px;
+  color: var(--app-text);
+  display: block;
+  text-decoration: none;
+  transition:
+    background 140ms ease,
+    border-color 140ms ease;
+}
+.mk-app .mk-card-flat--interactive {
+  cursor: pointer;
+}
+.mk-app .mk-card-flat--interactive:hover {
+  background: var(--app-surface-hover);
+  border-color: var(--app-border-strong);
+}
+
+/* ─ Badge (canonical) ─────────────────────────────────────────────── */
+.mk-app .mk-badge2 {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 20px;
+  padding: 0 8px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border-radius: 4px;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+.mk-app .mk-badge2--neutral {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--app-text-dim);
+  border-color: var(--app-border);
+}
+.mk-app .mk-badge2--info {
+  background: rgba(20, 241, 149, 0.12);
+  color: #c9beff;
+  border-color: rgba(20, 241, 149, 0.32);
+}
+.mk-app .mk-badge2--live {
+  background: rgba(20, 241, 149, 0.12);
+  color: #6ee7b7;
+  border-color: rgba(20, 241, 149, 0.32);
+}
+.mk-app .mk-badge2--offline {
+  background: rgba(239, 68, 68, 0.12);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.32);
+}
+.mk-app .mk-badge2--warn {
+  background: rgba(245, 158, 11, 0.12);
+  color: #fcd34d;
+  border-color: rgba(245, 158, 11, 0.32);
+}
+.mk-app .mk-badge2__dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: currentColor;
+  box-shadow: 0 0 6px currentColor;
+}
+
+/* ─ Empty state (canonical) ────────────────────────────────────────── */
+.mk-app .mk-empty2 {
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius);
+  padding: 56px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.mk-app .mk-empty2__icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: var(--app-accent-dim);
+  color: #c9beff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+.mk-app .mk-empty2__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--app-text);
+}
+.mk-app .mk-empty2__sub {
+  font-size: 12.5px;
+  color: var(--app-text-dim);
+  margin-top: 4px;
+  max-width: 340px;
+  line-height: 1.5;
+}
+.mk-app .mk-empty2__cta {
+  margin-top: 18px;
+}
+
+/* ─ Stat hint (extra slot below value, used in dense lists) ────────── */
+.mk-app .mk-stat__hint {
+  font-size: 11px;
+  color: var(--app-text-mute);
+  margin-top: 2px;
+}
+
+/* ─ Dense list rows (DataRow / List) ───────────────────────────────── */
+.mk-app .mk-list {
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius);
+  overflow: hidden;
+}
+.mk-app .mk-list__row {
+  display: grid;
+  grid-template-columns: var(--mk-row-cols, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--app-border);
+  transition: background 120ms ease;
+  text-decoration: none;
+  color: inherit;
+}
+.mk-app .mk-list__row:last-child {
+  border-bottom: none;
+}
+.mk-app .mk-list__row:hover {
+  background: var(--app-surface-hover);
+}
+.mk-app .mk-list__head {
+  display: grid;
+  grid-template-columns: var(--mk-row-cols, 1fr);
+  gap: 12px;
+  padding: 9px 14px;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--app-text-mute);
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid var(--app-border);
+}
+
+/* Listing card */
+.mk-app .mk-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius);
+  padding: 16px;
+  text-decoration: none;
+  color: inherit;
+  transition:
+    border-color 140ms ease,
+    background 140ms ease,
+    transform 140ms ease;
+}
+.mk-app .mk-card:hover {
+  border-color: var(--app-border-strong);
+  background: var(--app-surface-hover);
+}
+.mk-app .mk-card__top {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.mk-app .mk-card__icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--app-accent-dim);
+  color: #c9beff;
+  flex-shrink: 0;
+}
+.mk-app .mk-card__title-col {
+  flex: 1;
+  min-width: 0;
+}
+.mk-app .mk-card__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--app-text);
+  margin: 0;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mk-app .mk-card__seller {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  color: var(--app-text-mute);
+  margin-top: 3px;
+}
+.mk-app .mk-card__badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.mk-app .mk-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 20px;
+  padding: 0 8px;
+  font-size: 10.5px;
+  font-weight: 500;
+  border-radius: 4px;
+  text-transform: capitalize;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--app-text-dim);
+  border: 1px solid var(--app-border);
+}
+.mk-app .mk-badge--live {
+  background: rgba(20, 241, 149, 0.12);
+  border-color: rgba(20, 241, 149, 0.32);
+  color: #6ee7b7;
+}
+.mk-app .mk-badge__dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: #14f195;
+  box-shadow: 0 0 6px rgba(20, 241, 149, 0.8);
+}
+.mk-app .mk-badge--type {
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.04em;
+}
+.mk-app .mk-card__desc {
+  font-size: 12.5px;
+  color: var(--app-text-dim);
+  line-height: 1.5;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  flex: 1;
+}
+.mk-app .mk-card__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-height: 20px;
+}
+.mk-app .mk-card__rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11.5px;
+  color: var(--app-warn);
+  font-weight: 500;
+}
+.mk-app .mk-card__rating-count {
+  color: var(--app-text-mute);
+  font-weight: 400;
+}
+.mk-app .mk-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 8px;
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--app-text-dim);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--app-border);
+  border-radius: 4px;
+}
+.mk-app .mk-card__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--app-border);
+  flex-wrap: wrap;
+}
+.mk-app .mk-card__price {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.mk-app .mk-price {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--app-text);
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+}
+.mk-app .mk-price--free {
+  color: var(--app-ok);
+}
+.mk-app .mk-price__ccy {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--app-text-mute);
+}
+.mk-app .mk-card__neg {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10.5px;
+  color: #c9beff;
+  font-weight: 500;
+}
+.mk-app .mk-card__actions {
+  display: flex;
+  gap: 6px;
+}
+
+/* Responsive helpers — win over my other selectors (higher specificity
+   via `.mk-app` parent) so the mobile/desktop switch is deterministic. */
+.mk-app .mk-only-mobile {
+  display: inline-flex;
+}
+.mk-app .mk-only-desktop {
+  display: none;
+}
+@media (min-width: 768px) {
+  .mk-app .mk-only-mobile {
+    display: none !important;
+  }
+  .mk-app .mk-only-desktop {
+    display: inline-flex !important;
+  }
+  .mk-app .mk-seg.mk-only-desktop {
+    display: inline-flex !important;
+  }
+}
+
+.mk-app .mk-empty-app {
+  padding: 56px 24px;
+  text-align: center;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.mk-app .mk-empty-app__icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: var(--app-accent-dim);
+  color: #c9beff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+.mk-app .mk-empty-app__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--app-text);
+}
+.mk-app .mk-empty-app__sub {
+  font-size: 12.5px;
+  color: var(--app-text-dim);
+  margin-top: 4px;
+  max-width: 320px;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* ─ Market ticker ─ lift typography to match the rest of the dashboard
+   without touching the marquee mechanics or fixed row height. */
+.mk-ticker,
+.mk-ticker * {
+  font-weight: 500;
+}
+.mk-ticker .font-light,
+.mk-ticker .font-normal {
+  font-weight: 500;
+}
+.mk-ticker .font-medium,
+.mk-ticker .font-semibold {
+  font-weight: 600;
+}
+.mk-ticker .font-mono {
+  /* Keep mono for numeric/tag chunks but beef it up a touch so it
+     reads at the same visual weight as the rest of the row. */
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+/* ─ Mobile bottom tab bar ────────────────────────────────────────────── */
+.mk-mobile-tabbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  display: flex;
+  align-items: stretch;
+  justify-content: space-around;
+  background: rgba(7, 7, 10, 0.92);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-bottom: env(safe-area-inset-bottom);
+  height: calc(58px + env(safe-area-inset-bottom));
+}
+.mk-mobile-tab {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 8px 4px;
+  color: #71717a;
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  transition: color 150ms ease;
+  min-width: 0;
+}
+.mk-mobile-tab:active {
+  color: #e4e4e7;
+}
+.mk-mobile-tab--active {
+  color: #c9beff;
+}
+.mk-mobile-tab--active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 28px;
+  height: 2px;
+  border-radius: 0 0 2px 2px;
+  background: #14f195;
+  box-shadow: 0 0 10px #14f195;
+}
+.mk-mobile-tab {
+  position: relative;
+}
+.mk-mobile-tab__icon {
+  width: 20px;
+  height: 20px;
+}
+.mk-mobile-tab__label {
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* Add bottom breathing room below the fixed tab bar on phones. This
+   applies to every page that lives inside the app shell (mk-scope),
+   not just the ones that opted into .mk-app-page — so legacy pages
+   like /profile or /api-keys don't have their last row covered by
+   the tab bar either. */
+@media (max-width: 1023px) {
+  .mk-scope > .flex > div > main,
+  .mk-scope main#main-content,
+  .mk-app-page {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom));
+  }
+}

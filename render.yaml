@@ -1,0 +1,143 @@
+# Render Blueprint — haggl backend.
+#
+# How to use:
+#   1. Push this file to the repo root.
+#   2. On Render: New → Blueprint → connect this repo → Apply.
+#      Render will provision the database, the redis instance, and the
+#      backend web service in one shot.
+#   3. After provisioning, set the secret env vars marked `sync: false`
+#      in the dashboard (JWT_SECRET, RESEND_API_KEY, GITHUB_*, etc.).
+#   4. Once the backend is up, deploy the frontend on Vercel and set
+#      NEXT_PUBLIC_API_URL = https://<your-backend>.onrender.com/api/v1
+#      and CORS_ORIGINS on this backend = your Vercel URL(s).
+#
+# Cost note: defaults to `starter` plans for both DB and web service.
+# Bump to `standard` / `pro` once traffic grows.
+
+databases:
+  - name: haggl-postgres
+    databaseName: haggl
+    user: haggl
+    plan: starter
+    region: frankfurt
+    postgresMajorVersion: 16
+    ipAllowList: [] # internal-only access from the web service
+
+services:
+  # ── Redis (BullMQ + Throttler storage + cache) ─────────────────────
+  - type: keyvalue
+    name: haggl-redis
+    plan: starter
+    region: frankfurt
+    maxmemoryPolicy: allkeys-lru
+    ipAllowList: []
+
+  # ── Backend (NestJS) ──────────────────────────────────────────────
+  - type: web
+    name: haggl-backend
+    runtime: node
+    plan: starter
+    region: frankfurt
+    rootDir: backend
+    # `npm install` already runs `prisma generate` via postinstall (see
+    # backend/package.json). The build step compiles TS → dist/.
+    buildCommand: npm install --legacy-peer-deps && npx prisma generate && npm run build
+    # On every deploy: run pending migrations, then start the compiled
+    # server. Migrations are idempotent — first deploy creates the
+    # schema, subsequent deploys no-op if no new migrations.
+    startCommand: npx prisma migrate deploy && node dist/main.js
+    healthCheckPath: /api/v1/health
+    autoDeploy: true
+    envVars:
+      # ── Provisioned by Render ─────────────────────────────────────
+      - key: DATABASE_URL
+        fromDatabase:
+          name: haggl-postgres
+          property: connectionString
+      - key: DIRECT_URL
+        fromDatabase:
+          name: haggl-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: haggl-redis
+          property: connectionString
+
+      # ── Static config ─────────────────────────────────────────────
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: PRISMA_CONNECTION_LIMIT
+        value: '10'
+      - key: RATE_LIMIT_WINDOW_MS
+        value: '60000'
+      - key: RATE_LIMIT_MAX_REQUESTS
+        value: '120'
+      - key: AI_RATE_LIMIT_MAX
+        value: '30'
+      - key: CHAT_RATE_LIMIT_MAX
+        value: '60'
+      - key: CHAT_BOTS_DISABLED
+        value: 'false'
+      - key: SEED_LISTINGS_ON_BOOT
+        value: 'false'
+      - key: BOLTYGUARD_BACKFILL_ON_BOOT
+        value: 'false'
+      - key: JWT_EXPIRES_IN
+        value: 15m
+      - key: JWT_REFRESH_EXPIRES_IN
+        value: 30d
+      - key: BOLTY_TOKEN_DECIMALS
+        value: '18'
+      - key: BOLTYGUARD_MIN_HOLDING
+        value: '0'
+      - key: PRICE_API_URL
+        value: https://api.coingecko.com/api/v3
+
+      # ── URLs (set after the first deploy lands so we know the
+      # frontend's Vercel URL — leave as placeholders, overwrite in the
+      # dashboard once you have them). ──────────────────────────────
+      - key: FRONTEND_URL
+        value: https://haggl.tech
+      - key: CORS_ORIGINS
+        value: https://haggl.tech,https://www.haggl.tech
+      - key: COOKIE_DOMAIN
+        value: .haggl.tech
+      - key: GITHUB_CALLBACK_URL
+        value: https://api.haggl.tech/api/v1/auth/github/callback
+      - key: X_REDIRECT_URI
+        value: https://api.haggl.tech/api/v1/auth/twitter/callback
+      - key: X_AGENT_REDIRECT_URI
+        value: https://api.haggl.tech/api/v1/agents/twitter/callback
+
+      # ── Secrets (set in dashboard → Environment → not in git) ────
+      - key: JWT_SECRET
+        generateValue: true
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: CSRF_SECRET
+        generateValue: true
+      - key: AGENT_HMAC_SECRET
+        generateValue: true
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: GITHUB_CLIENT_ID
+        sync: false
+      - key: GITHUB_CLIENT_SECRET
+        sync: false
+      - key: X_CLIENT_ID
+        sync: false
+      - key: X_CLIENT_SECRET
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: ETH_RPC_URL
+        sync: false
+      - key: BOLTY_TOKEN_ADDRESS
+        sync: false
+      - key: BOLTY_TOKEN_CONTRACT
+        sync: false
